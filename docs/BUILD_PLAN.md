@@ -6,7 +6,7 @@
 ## Progress
 
 - [x] **Step 0** — Cross-session tracking setup
-- [ ] **Step 1** — Supabase wiring
+- [x] **Step 1** — Supabase wiring
 - [ ] **Step 2** — Auth + profiles
 - [ ] **Step 3** — Gyms schema + RLS + admin/manager roles
 - [ ] **Step 4** — Gyms list page + search
