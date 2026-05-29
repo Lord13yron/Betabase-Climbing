@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { canManageGym } from '@/lib/auth/can-manage-gym'
 import { type Discipline } from '@/lib/grades'
+import { BetaUploader } from '@/components/BetaUploader'
+import { VideoGallery, type GalleryVideo } from '@/components/VideoGallery'
 
 const DISCIPLINE_LABEL: Record<Discipline, string> = {
   boulder: 'Boulder',
@@ -40,6 +43,24 @@ export default async function RouteDetailPage({
 
   if (error || !data) notFound()
   const route = data
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: allVideos } = await supabase
+    .from('videos')
+    .select('id, status, mux_playback_id, caption, uploader_id')
+    .eq('route_id', routeId)
+    .order('created_at', { ascending: false })
+    .returns<GalleryVideo[]>()
+
+  // Ready clips are public; pending/errored ones only show to their uploader so
+  // others don't see in-flight or failed processing noise.
+  const videos = (allVideos ?? []).filter(
+    (v) => v.status === 'ready' || v.uploader_id === user?.id
+  )
+  const canManage = await canManageGym(route.gym_id)
 
   const wallName = route.walls?.name ?? 'Unassigned'
   const setDate = route.set_date
@@ -81,7 +102,23 @@ export default async function RouteDetailPage({
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Beta videos</h2>
-        <p className="mt-2 text-sm text-foreground/70">No beta videos yet.</p>
+        <VideoGallery
+          videos={videos}
+          currentUserId={user?.id ?? null}
+          canManage={canManage}
+        />
+        <div className="mt-4">
+          {user ? (
+            <BetaUploader routeId={route.id} />
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm text-foreground/70 hover:underline"
+            >
+              Log in to add beta
+            </Link>
+          )}
+        </div>
       </section>
 
       <section className="mt-8">
