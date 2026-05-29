@@ -13,7 +13,7 @@
 - [x] **Step 5** — Walls + routes schema + RLS + grades lib
 - [x] **Step 6** — Gym detail page (read) + sort/filter
 - [x] **Step 7** — Manager CRUD UI
-- [ ] **Step 8** — Route detail page (read)
+- [x] **Step 8** — Route detail page (read)
 - [ ] **Step 9** — Mux upload + playback (de-risking step)
 - [ ] **Step 10** — Profiles (avatar, height, max grades, view others)
 - [ ] **Step 11** — Sends
