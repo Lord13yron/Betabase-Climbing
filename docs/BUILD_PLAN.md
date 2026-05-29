@@ -11,7 +11,7 @@
 - [x] **Step 3** — Gyms schema + RLS + admin/manager roles
 - [x] **Step 4** — Gyms list page + search
 - [x] **Step 5** — Walls + routes schema + RLS + grades lib
-- [ ] **Step 6** — Gym detail page (read) + sort/filter
+- [x] **Step 6** — Gym detail page (read) + sort/filter
 - [ ] **Step 7** — Manager CRUD UI
 - [ ] **Step 8** — Route detail page (read)
 - [ ] **Step 9** — Mux upload + playback (de-risking step)
