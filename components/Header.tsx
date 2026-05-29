@@ -20,9 +20,14 @@ export async function Header() {
 
   return (
     <header className="flex items-center justify-between border-b border-foreground/10 px-4 py-3">
-      <Link href="/" className="font-semibold">
-        Betabase
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/" className="font-semibold">
+          Betabase
+        </Link>
+        <Link href="/gyms" className="text-sm underline">
+          Gyms
+        </Link>
+      </div>
 
       {user ? (
         <div className="flex items-center gap-4 text-sm">
