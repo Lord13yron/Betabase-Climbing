@@ -8,7 +8,7 @@
 - [x] **Step 0** — Cross-session tracking setup
 - [x] **Step 1** — Supabase wiring
 - [x] **Step 2** — Auth + profiles
-- [ ] **Step 3** — Gyms schema + RLS + admin/manager roles
+- [x] **Step 3** — Gyms schema + RLS + admin/manager roles
 - [ ] **Step 4** — Gyms list page + search
 - [ ] **Step 5** — Walls + routes schema + RLS + grades lib
 - [ ] **Step 6** — Gym detail page (read) + sort/filter
