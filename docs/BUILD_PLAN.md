@@ -7,7 +7,7 @@
 
 - [x] **Step 0** — Cross-session tracking setup
 - [x] **Step 1** — Supabase wiring
-- [ ] **Step 2** — Auth + profiles
+- [x] **Step 2** — Auth + profiles
 - [ ] **Step 3** — Gyms schema + RLS + admin/manager roles
 - [ ] **Step 4** — Gyms list page + search
 - [ ] **Step 5** — Walls + routes schema + RLS + grades lib
@@ -110,7 +110,7 @@ Write `docs/BUILD_PLAN.md` (this plan + progress checklist), add the pointer blo
 Install `@supabase/supabase-js` + `@supabase/ssr`; add `lib/supabase/server.ts` + `client.ts`; create `.env.local`.
 *Verify:* a server component runs a trivial Supabase query with no error; `npm run build` passes.
 
-**Step 2 — Auth + profiles**
+**Step 2 — Auth + profiles** ✅
 Email/password + Google login/signup pages, auth callback route, `profiles` table, and row creation on signup (username required).
 *Verify:* sign up via email and via Google; a `profiles` row appears; log out/in works.
 
