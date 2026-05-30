@@ -51,18 +51,22 @@ export function CommentThread({
 }) {
   const router = useRouter()
   const [body, setBody] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPosting, startPost] = useTransition()
   const [isDeleting, startDelete] = useTransition()
 
   const onPost = () => {
     if (!body.trim()) return
+    setError(null)
     startPost(async () => {
       const res = await createCommentAction(target, body, routeId)
-      if (!res.error) {
-        setBody('')
-        router.refresh()
+      if (res.error) {
+        setError(res.error)
+        return
       }
+      setBody('')
+      router.refresh()
     })
   }
 
@@ -118,7 +122,7 @@ export function CommentThread({
                       </button>
                     )}
                   </div>
-                  <p className="whitespace-pre-wrap break-words text-sm text-foreground/80">
+                  <p className="whitespace-pre-wrap wrap-break-word text-sm text-foreground/80">
                     {c.body}
                   </p>
                 </div>
@@ -127,6 +131,8 @@ export function CommentThread({
           })}
         </ul>
       )}
+
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       {currentUserId ? (
         <div className="mt-3 flex items-start gap-2">

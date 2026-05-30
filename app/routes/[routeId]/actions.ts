@@ -97,9 +97,15 @@ export async function createCommentAction(
   if (!trimmed) return { error: 'Comment is empty.' }
   if (trimmed.length > COMMENT_MAX) return { error: 'Comment is too long.' }
 
+  // Map the camelCase target to the snake_case column the table actually uses.
+  const targetColumn =
+    'routeId' in target
+      ? { route_id: target.routeId }
+      : { video_id: target.videoId }
+
   const { error } = await supabase
     .from('comments')
-    .insert({ author_id: user.id, ...target, body: trimmed })
+    .insert({ author_id: user.id, ...targetColumn, body: trimmed })
   if (error) return { error: error.message }
 
   revalidatePath(`/routes/${revalidateRouteId}`)
