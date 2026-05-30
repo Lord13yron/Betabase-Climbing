@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOutAction } from '@/app/(auth)/actions'
+import { Avatar } from '@/components/Avatar'
 
 export async function Header() {
   const supabase = await createClient()
@@ -9,13 +10,15 @@ export async function Header() {
   } = await supabase.auth.getUser()
 
   let username: string | null = null
+  let avatarUrl: string | null = null
   if (user) {
     const { data } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, avatar_url')
       .eq('id', user.id)
       .single()
     username = data?.username ?? null
+    avatarUrl = data?.avatar_url ?? null
   }
 
   return (
@@ -31,7 +34,10 @@ export async function Header() {
 
       {user ? (
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-foreground/70">{username ?? user.email}</span>
+          <Link href="/profile" className="flex items-center gap-2">
+            <Avatar src={avatarUrl} name={username} size={28} />
+            <span className="text-foreground/70">{username ?? user.email}</span>
+          </Link>
           <form action={signOutAction}>
             <button type="submit" className="underline">
               Sign out
