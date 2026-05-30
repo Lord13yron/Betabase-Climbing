@@ -16,7 +16,7 @@
 - [x] **Step 8** — Route detail page (read)
 - [x] **Step 9** — Mux upload + playback (de-risking step)
 - [x] **Step 10** — Profiles (avatar, height, max grades, view others)
-- [ ] **Step 11** — Sends
+- [x] **Step 11** — Sends
 - [ ] **Step 12** — Favorites
 - [ ] **Step 13** — Comments
 

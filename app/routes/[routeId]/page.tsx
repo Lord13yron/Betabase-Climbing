@@ -5,6 +5,8 @@ import { canManageGym } from '@/lib/auth/can-manage-gym'
 import { type Discipline } from '@/lib/grades'
 import { BetaUploader } from '@/components/BetaUploader'
 import { VideoGallery, type GalleryVideo } from '@/components/VideoGallery'
+import { Avatar } from '@/components/Avatar'
+import { SendToggle } from '@/components/SendToggle'
 
 const DISCIPLINE_LABEL: Record<Discipline, string> = {
   boulder: 'Boulder',
@@ -23,6 +25,12 @@ type RouteDetail = {
   wall_id: string | null
   gyms: { id: string; name: string } | null
   walls: { name: string } | null
+}
+
+type SenderRow = {
+  user_id: string
+  sent_at: string
+  profiles: { username: string; avatar_url: string | null } | null
 }
 
 export default async function RouteDetailPage({
@@ -62,6 +70,34 @@ export default async function RouteDetailPage({
   )
   const canManage = await canManageGym(route.gym_id)
 
+  // Aggregate count is the source of truth for the number; the capped sender
+  // fetch (9 = 8 shown + 1 to detect overflow) is only for the avatar row.
+  const { count: sendCount } = await supabase
+    .from('sends')
+    .select('id', { count: 'exact', head: true })
+    .eq('route_id', routeId)
+
+  const { data: senders } = await supabase
+    .from('sends')
+    .select('user_id, sent_at, profiles(username, avatar_url)')
+    .eq('route_id', routeId)
+    .order('sent_at', { ascending: false })
+    .limit(9)
+    .returns<SenderRow[]>()
+
+  let sent = false
+  if (user) {
+    const { data: mySend } = await supabase
+      .from('sends')
+      .select('id')
+      .eq('route_id', routeId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    sent = !!mySend
+  }
+
+  const totalSends = sendCount ?? 0
+
   const wallName = route.walls?.name ?? 'Unassigned'
   const setDate = route.set_date
     ? new Date(route.set_date).toLocaleDateString('en-US', {
@@ -99,6 +135,44 @@ export default async function RouteDetailPage({
         <span>{wallName}</span>
         {setDate && <span>Set {setDate}</span>}
       </div>
+
+      <section className="mt-6">
+        {user ? (
+          <SendToggle routeId={route.id} sent={sent} />
+        ) : (
+          <Link
+            href="/login"
+            className="text-sm text-foreground/70 hover:underline"
+          >
+            Log in to log your send
+          </Link>
+        )}
+
+        <p className="mt-3 text-sm text-foreground/70">
+          {totalSends} {totalSends === 1 ? 'send' : 'sends'}
+        </p>
+
+        {senders && senders.length > 0 && (
+          <div className="mt-2 flex items-center gap-1">
+            {senders.slice(0, 8).map((s) =>
+              s.profiles ? (
+                <Link key={s.user_id} href={`/u/${s.profiles.username}`}>
+                  <Avatar
+                    src={s.profiles.avatar_url}
+                    name={s.profiles.username}
+                    size={32}
+                  />
+                </Link>
+              ) : null
+            )}
+            {totalSends > 8 && (
+              <span className="ml-1 text-sm text-foreground/70">
+                +{totalSends - 8} more
+              </span>
+            )}
+          </div>
+        )}
+      </section>
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Beta videos</h2>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Avatar } from '@/components/Avatar'
+import { UserSends } from '@/components/UserSends'
 import { HeightDisplay } from './HeightDisplay'
 
 type PublicProfile = {
@@ -62,6 +63,8 @@ export default async function UserProfilePage({
           <dd>{profile.max_route_grade ?? '—'}</dd>
         </div>
       </dl>
+
+      <UserSends userId={profile.id} />
     </main>
   )
 }
