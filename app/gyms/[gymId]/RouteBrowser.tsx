@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { type Discipline, gradesForDiscipline } from '@/lib/grades'
+import { FavoriteToggle } from '@/components/FavoriteToggle'
 
 type Route = {
   id: string
@@ -43,10 +44,18 @@ const SELECT_CLASS =
 export function RouteBrowser({
   routes,
   walls,
+  favoritedRouteIds,
+  canFavorite,
 }: {
   routes: Route[]
   walls: Wall[]
+  favoritedRouteIds: string[]
+  canFavorite: boolean
 }) {
+  const favorited = useMemo(
+    () => new Set(favoritedRouteIds),
+    [favoritedRouteIds]
+  )
   const [discipline, setDiscipline] = useState<'all' | Discipline>('all')
   const [gradeMin, setGradeMin] = useState(0)
   const [gradeMax, setGradeMax] = useState(0)
@@ -259,11 +268,11 @@ export function RouteBrowser({
       ) : (
         <ul className="mt-6 flex flex-col gap-3">
           {visible.map((r) => (
-            <li key={r.id}>
-              <Link
-                href={`/routes/${r.id}`}
-                className="block rounded border border-foreground/20 px-4 py-3 hover:bg-foreground/5"
-              >
+            <li
+              key={r.id}
+              className="flex items-center gap-2 rounded border border-foreground/20 pr-3 hover:bg-foreground/5"
+            >
+              <Link href={`/routes/${r.id}`} className="block flex-1 px-4 py-3">
                 <span className="font-medium">{r.name}</span>
                 <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/70">
                   <span className="font-medium text-foreground">
@@ -282,6 +291,13 @@ export function RouteBrowser({
                   <span>{wallName(r.wall_id)}</span>
                 </span>
               </Link>
+              {canFavorite && (
+                <FavoriteToggle
+                  kind="route"
+                  id={r.id}
+                  favorited={favorited.has(r.id)}
+                />
+              )}
             </li>
           ))}
         </ul>

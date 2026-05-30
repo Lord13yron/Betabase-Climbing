@@ -7,6 +7,7 @@ import { BetaUploader } from '@/components/BetaUploader'
 import { VideoGallery, type GalleryVideo } from '@/components/VideoGallery'
 import { Avatar } from '@/components/Avatar'
 import { SendToggle } from '@/components/SendToggle'
+import { FavoriteToggle } from '@/components/FavoriteToggle'
 
 const DISCIPLINE_LABEL: Record<Discipline, string> = {
   boulder: 'Boulder',
@@ -86,14 +87,24 @@ export default async function RouteDetailPage({
     .returns<SenderRow[]>()
 
   let sent = false
+  let favorited = false
   if (user) {
-    const { data: mySend } = await supabase
-      .from('sends')
-      .select('id')
-      .eq('route_id', routeId)
-      .eq('user_id', user.id)
-      .maybeSingle()
+    const [{ data: mySend }, { data: myFav }] = await Promise.all([
+      supabase
+        .from('sends')
+        .select('id')
+        .eq('route_id', routeId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('favorite_routes')
+        .select('route_id')
+        .eq('route_id', routeId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
     sent = !!mySend
+    favorited = !!myFav
   }
 
   const totalSends = sendCount ?? 0
@@ -138,7 +149,10 @@ export default async function RouteDetailPage({
 
       <section className="mt-6">
         {user ? (
-          <SendToggle routeId={route.id} sent={sent} />
+          <div className="flex items-center gap-3">
+            <SendToggle routeId={route.id} sent={sent} />
+            <FavoriteToggle kind="route" id={route.id} favorited={favorited} />
+          </div>
         ) : (
           <Link
             href="/login"

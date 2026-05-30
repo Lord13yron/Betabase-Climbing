@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { UserSends } from '@/components/UserSends'
+import { UserFavorites } from '@/components/UserFavorites'
 import { EditProfileForm } from './EditProfileForm'
 
 export default async function ProfilePage() {
@@ -33,6 +34,7 @@ export default async function ProfilePage() {
       />
 
       <UserSends userId={user.id} />
+      <UserFavorites userId={user.id} />
     </main>
   )
 }

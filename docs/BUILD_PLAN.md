@@ -17,7 +17,7 @@
 - [x] **Step 9** — Mux upload + playback (de-risking step)
 - [x] **Step 10** — Profiles (avatar, height, max grades, view others)
 - [x] **Step 11** — Sends
-- [ ] **Step 12** — Favorites
+- [x] **Step 12** — Favorites
 - [ ] **Step 13** — Comments
 
 ---
