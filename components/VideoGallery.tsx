@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import MuxPlayer from '@mux/mux-player-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { CommentThread, type Comment } from '@/components/CommentThread'
 import { deleteVideoAction } from '@/app/routes/[routeId]/actions'
 
 export type GalleryVideo = {
@@ -18,13 +19,18 @@ export function VideoGallery({
   videos,
   currentUserId,
   canManage,
+  commentsByVideo,
+  routeId,
 }: {
   videos: GalleryVideo[]
   currentUserId: string | null
   canManage: boolean
+  commentsByVideo: Record<string, Comment[]>
+  routeId: string
 }) {
   const router = useRouter()
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [openComments, setOpenComments] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   // While anything is transcoding, poll so the card flips to a player once the
@@ -84,6 +90,26 @@ export function VideoGallery({
                 >
                   Delete
                 </button>
+              )}
+            </div>
+            <div className="px-3 pb-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setOpenComments((id) => (id === video.id ? null : video.id))
+                }
+                className="text-sm text-foreground/70 hover:underline"
+              >
+                💬 {(commentsByVideo[video.id] ?? []).length}
+              </button>
+              {openComments === video.id && (
+                <CommentThread
+                  comments={commentsByVideo[video.id] ?? []}
+                  currentUserId={currentUserId}
+                  canManage={canManage}
+                  target={{ videoId: video.id }}
+                  routeId={routeId}
+                />
               )}
             </div>
           </div>

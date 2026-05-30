@@ -76,3 +76,68 @@ export async function toggleSendAction(routeId: string): Promise<FormState> {
   revalidatePath(`/routes/${routeId}`)
   return { ok: true }
 }
+
+const COMMENT_MAX = 1000
+
+// Post a flat comment on a route or a video. `target` carries exactly one id;
+// `revalidateRouteId` is the route page to refresh (equals the route for route
+// comments, or the parent route for a video comment).
+export async function createCommentAction(
+  target: { routeId: string } | { videoId: string },
+  body: string,
+  revalidateRouteId: string
+): Promise<FormState> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const trimmed = body.trim()
+  if (!trimmed) return { error: 'Comment is empty.' }
+  if (trimmed.length > COMMENT_MAX) return { error: 'Comment is too long.' }
+
+  const { error } = await supabase
+    .from('comments')
+    .insert({ author_id: user.id, ...target, body: trimmed })
+  if (error) return { error: error.message }
+
+  revalidatePath(`/routes/${revalidateRouteId}`)
+  return { ok: true }
+}
+
+// Delete a comment if the user is its author, the gym's manager, or an admin.
+// RLS is the backstop, but we authorize here too. The gym is resolved from the
+// comment's route, or from its video's route.
+export async function deleteCommentAction(
+  commentId: string,
+  revalidateRouteId: string
+): Promise<FormState> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated.' }
+
+  const { data: comment } = await supabase
+    .from('comments')
+    .select('author_id, routes(gym_id), videos(routes(gym_id))')
+    .eq('id', commentId)
+    .single<{
+      author_id: string
+      routes: { gym_id: string } | null
+      videos: { routes: { gym_id: string } | null } | null
+    }>()
+  if (!comment) return { error: 'Comment not found.' }
+
+  const gymId = comment.routes?.gym_id ?? comment.videos?.routes?.gym_id
+  const allowed =
+    comment.author_id === user.id || (gymId ? await canManageGym(gymId) : false)
+  if (!allowed) return { error: 'Not authorized.' }
+
+  const { error } = await supabase.from('comments').delete().eq('id', commentId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/routes/${revalidateRouteId}`)
+  return { ok: true }
+}

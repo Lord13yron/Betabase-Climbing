@@ -18,7 +18,7 @@
 - [x] **Step 10** — Profiles (avatar, height, max grades, view others)
 - [x] **Step 11** — Sends
 - [x] **Step 12** — Favorites
-- [ ] **Step 13** — Comments
+- [x] **Step 13** — Comments
 
 ---
 

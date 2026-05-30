@@ -8,6 +8,7 @@ import { VideoGallery, type GalleryVideo } from '@/components/VideoGallery'
 import { Avatar } from '@/components/Avatar'
 import { SendToggle } from '@/components/SendToggle'
 import { FavoriteToggle } from '@/components/FavoriteToggle'
+import { CommentThread, type Comment } from '@/components/CommentThread'
 
 const DISCIPLINE_LABEL: Record<Discipline, string> = {
   boulder: 'Boulder',
@@ -70,6 +71,30 @@ export default async function RouteDetailPage({
     (v) => v.status === 'ready' || v.uploader_id === user?.id
   )
   const canManage = await canManageGym(route.gym_id)
+
+  const COMMENT_SELECT = 'id, body, created_at, author_id, profiles(username, avatar_url)'
+
+  const { data: routeComments } = await supabase
+    .from('comments')
+    .select(COMMENT_SELECT)
+    .eq('route_id', routeId)
+    .order('created_at', { ascending: false })
+    .returns<Comment[]>()
+
+  // Comments for the videos shown on this page, grouped by video for the gallery.
+  const videoIds = videos.map((v) => v.id)
+  const commentsByVideo: Record<string, Comment[]> = {}
+  if (videoIds.length > 0) {
+    const { data: videoComments } = await supabase
+      .from('comments')
+      .select(`${COMMENT_SELECT}, video_id`)
+      .in('video_id', videoIds)
+      .order('created_at', { ascending: false })
+      .returns<(Comment & { video_id: string })[]>()
+    for (const c of videoComments ?? []) {
+      ;(commentsByVideo[c.video_id] ??= []).push(c)
+    }
+  }
 
   // Aggregate count is the source of truth for the number; the capped sender
   // fetch (9 = 8 shown + 1 to detect overflow) is only for the avatar row.
@@ -194,6 +219,8 @@ export default async function RouteDetailPage({
           videos={videos}
           currentUserId={user?.id ?? null}
           canManage={canManage}
+          commentsByVideo={commentsByVideo}
+          routeId={route.id}
         />
         <div className="mt-4">
           {user ? (
@@ -211,7 +238,13 @@ export default async function RouteDetailPage({
 
       <section className="mt-8">
         <h2 className="text-lg font-semibold">Comments</h2>
-        <p className="mt-2 text-sm text-foreground/70">No comments yet.</p>
+        <CommentThread
+          comments={routeComments ?? []}
+          currentUserId={user?.id ?? null}
+          canManage={canManage}
+          target={{ routeId: route.id }}
+          routeId={route.id}
+        />
       </section>
     </main>
   )
