@@ -59,8 +59,9 @@
   background var(--dur-fast), border-color var(--dur-fast);
 }
 .g-pill:hover { border-color: var(--color-slate-400); color: var(--color-chalk-100); }
-.g-pill.is-active { background: var(--accent); color: var(--on-accent);
-  border-color: var(--accent); }
+.g-pill.is-active { background-color: var(--accent); background-image: var(--wood-fine);
+  background-size: 220px 140px; background-blend-mode: multiply;
+  color: var(--on-accent); border-color: var(--accent); }
 
 .g-tools-right { display: flex; align-items: center; gap: 16px; }
 .g-count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
