@@ -1,15 +1,105 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   BETABASE — globals.css
+   Design tokens + landing component layer.
+   Fonts are loaded with next/font in app/layout.tsx and exposed
+   as --font-playfair / --font-plex-mono / --font-hanken on <html>.
+   ============================================================ */
 
 @theme inline {
+  /* Map the brand families onto Tailwind's font utilities + our --font-* vars.
+     (next/font sets --font-playfair etc. on the <html> element.) */
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-ui: var(--font-hanken), -apple-system, "Segoe UI", system-ui, sans-serif;
+
+  /* Compatibility: the existing (light-themed) app leans heavily on
+     text-foreground/bg-background and the default sans font. Keep those mapped
+     so app surfaces render unchanged — only the landing opts into the dark
+     brand palette, scoped via .bb-landing. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-hanken), -apple-system, "Segoe UI", system-ui, sans-serif;
+
+  /* Core neutrals (cool concrete / slate) — exposed as bg-slate-800 etc. */
+  --color-slate-900: #0e1216;
+  --color-slate-800: #151a20;
+  --color-slate-700: #1d242c;
+  --color-slate-600: #27303a;
+  --color-slate-500: #394452;
+  --color-slate-400: #5b6776;
+  --color-slate-300: #8593a2;
+
+  /* Chalk / paper */
+  --color-chalk-50: #f6f9fb;
+  --color-chalk-100: #e7edf2;
+  --color-chalk-200: #d3dbe3;
+  --color-chalk-300: #b4bfc9;
+
+  /* Brand accent (plywood gold) */
+  --color-plywood-700: #8a6a3a;
+  --color-plywood-600: #a47e48;
+  --color-plywood-500: #c79f65;
+  --color-plywood-400: #d6b47f;
+  --color-plywood-300: #e3c99d;
+  --color-plywood-100: #f1e4c9;
+
+  /* Climbing-hold route colors */
+  --color-hold-red: #d6453b;
+  --color-hold-orange: #e5743a;
+  --color-hold-yellow: #edb23a;
+  --color-hold-green: #4e9d5b;
+  --color-hold-teal: #2e93ae;
+  --color-hold-blue: #3e6fb3;
+  --color-hold-purple: #7e5ca8;
+  --color-hold-pink: #d85b9a;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+}
+
+/* ============================================================
+   Semantic tokens + raw values used by the landing layer
+   ============================================================ */
+:root {
+  /* App (non-landing) theme — preserved from the original globals.css so the
+     existing light-themed surfaces are untouched. */
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --bg: var(--color-slate-800);
+  --bg-deep: var(--color-slate-900);
+  --surface: var(--color-slate-700);
+  --surface-hover: var(--color-slate-600);
+  --hairline: var(--color-slate-500);
+  --hairline-soft: rgba(231, 237, 242, 0.1);
+
+  --scrim: 11, 15, 19; /* dark photo-protection scrim (rgb triple) */
+  --paper: 231, 237, 242; /* light paper tint (rgb triple) */
+
+  --fg: var(--color-chalk-100);
+  --fg-muted: var(--color-slate-300);
+  --fg-faint: var(--color-slate-400);
+  --accent: var(--color-plywood-500);
+  --accent-hover: var(--color-plywood-600);
+  --on-accent: #1a1206; /* dark ink for text on gold */
+
+  /* motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur: 240ms;
+
+  /* ---- plywood wall texture (pale birch climbing-wall veneer) ---- */
+  --ply-base: #e4cea1;
+  --ply-grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='620'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.045 0.0055' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.36 0 0 0 0 0.27 0 0 0 0 0.13 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3C/svg%3E");
+  --ply-grain-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='720'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03 0.004' numOctaves='3' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.97 0 0 0 0 0.86 0 0 0 0.30 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/svg%3E");
+  --ply-band: repeating-linear-gradient(91deg, rgba(120, 86, 40, 0) 0, rgba(120, 86, 40, 0.05) 26px, rgba(255, 245, 214, 0.05) 60px, rgba(120, 86, 40, 0) 110px);
+  --ply-tnuts: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='112'%3E%3Cg transform='translate(59 56)'%3E%3Crect x='-5.5' y='-5.5' width='11' height='11' transform='rotate(45)' fill='%23fbf3df' opacity='0.28'/%3E%3Crect x='-3.6' y='-3.6' width='7.2' height='7.2' transform='rotate(45)' fill='%23241a0c' opacity='0.82'/%3E%3C/g%3E%3C/svg%3E");
+  --wood-fine: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.09' numOctaves='4' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.14 0 0 0 0 0.09 0 0 0 0 0.03 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +112,580 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ui);
+}
+
+/* The landing page opts into the dark brand palette; the rest of the app keeps
+   the light --background/--foreground theme above. */
+.bb-landing {
+  background: var(--color-slate-900);
+  color: var(--fg);
+}
+
+/* On app (non-landing) pages the brand nav sits in the normal flow as a solid
+   bar instead of floating transparent over a hero. */
+.bb-nav.is-app {
+  position: static;
+  background: var(--color-slate-900);
+  padding: 16px 56px;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+/* ============================================================
+   LANDING LAYER — bespoke marketing styles
+   (textures, gradients, ghost numerals: things that don't map
+   cleanly to utilities). Layout/spacing use Tailwind in the TSX.
+   ============================================================ */
+@layer components {
+  .bb-eyebrow {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-plywood-500);
+  }
+  .bb-eyebrow-line {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    white-space: nowrap;
+  }
+  .bb-eyebrow-line::before {
+    content: "";
+    flex: none;
+    width: 56px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.65;
+  }
+  .bb-mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+  }
+  .bb-mono-label {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+  .bb-accent-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-plywood-500);
+  }
+  .bb-link-arrow {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--color-plywood-400);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap var(--dur) var(--ease-out);
+  }
+  .bb-link-arrow:hover {
+    gap: 13px;
+  }
+
+  /* buttons */
+  .bb-btn {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 13px 22px;
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out);
+  }
+  .bb-btn:active {
+    transform: scale(0.97);
+  }
+  .bb-btn-sm {
+    padding: 9px 16px;
+    font-size: 14px;
+  }
+  .bb-btn-primary {
+    background-color: var(--color-plywood-500);
+    background-image: var(--wood-fine);
+    background-size: 220px 140px;
+    background-blend-mode: multiply;
+    color: var(--on-accent);
+  }
+  .bb-btn-primary svg {
+    stroke: var(--on-accent);
+  }
+  .bb-btn-primary:hover {
+    background-color: var(--color-plywood-600);
+  }
+  .bb-btn-ghost-light {
+    background: rgba(var(--paper), 0.06);
+    color: var(--color-chalk-100);
+    border-color: var(--hairline-soft);
+    backdrop-filter: blur(8px);
+  }
+  .bb-btn-ghost-light:hover {
+    background: rgba(var(--paper), 0.12);
+  }
+  .bb-btn-ink {
+    background: var(--color-slate-800);
+    color: var(--color-chalk-50);
+  }
+  .bb-btn-ink svg {
+    stroke: var(--color-chalk-50);
+  }
+  .bb-btn-ink:hover {
+    background: var(--color-slate-900);
+  }
+  .bb-btn-ghost-chalk {
+    background: var(--color-chalk-50);
+    color: var(--color-slate-800);
+    border-color: color-mix(in srgb, var(--color-slate-800) 18%, transparent);
+  }
+  .bb-btn-ghost-chalk svg {
+    stroke: var(--color-slate-800);
+  }
+  .bb-btn-ghost-chalk:hover {
+    background: #fff;
+    border-color: color-mix(in srgb, var(--color-slate-800) 32%, transparent);
+  }
+
+  /* logo */
+  .bb-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+    color: var(--color-chalk-100);
+  }
+  .bb-logo-mark {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex: none;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+  }
+
+  /* nav */
+  .bb-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 56px;
+    transition: all var(--dur) var(--ease-out);
+  }
+  .bb-nav.is-scrolled {
+    padding: 13px 56px;
+    background: rgba(var(--scrim), 0.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline-soft);
+  }
+  .bb-nav-links {
+    display: flex;
+    gap: 34px;
+  }
+  .bb-nav-links a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--color-chalk-100);
+    opacity: 0.82;
+    transition: opacity var(--dur-fast);
+  }
+  .bb-nav-links a:hover {
+    opacity: 1;
+    color: var(--color-plywood-400);
+  }
+  .bb-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .bb-nav-login {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-chalk-100);
+    opacity: 0.82;
+  }
+  .bb-nav-login:hover {
+    opacity: 1;
+  }
+
+  /* hero */
+  .bb-hero {
+    position: relative;
+    height: 108vh;
+    min-height: 840px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+  }
+  .bb-hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 340px;
+    background: linear-gradient(to bottom, rgba(var(--scrim), 0) 0%, rgba(var(--scrim), 0.32) 30%, rgba(var(--scrim), 0.82) 56%, var(--color-slate-900) 78%);
+    z-index: 1;
+    pointer-events: none;
+  }
+  .bb-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.04);
+  }
+  .bb-hero-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(var(--scrim), 0.78) 0%, rgba(var(--scrim), 0.42) 42%, rgba(var(--scrim), 0.42) 60%, rgba(var(--scrim), 0.72) 100%);
+  }
+  .bb-hero-inner {
+    position: relative;
+    z-index: 2;
+    padding: 0 56px;
+    padding-top: 19vh;
+    max-width: 920px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .bb-hero-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 60px;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    color: var(--color-chalk-50);
+    margin: 0 0 24px;
+  }
+  .bb-hero-sub {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--color-chalk-100);
+    opacity: 0.86;
+    max-width: 460px;
+    margin: 0 0 32px;
+  }
+  .bb-scroll-hint {
+    position: absolute;
+    left: 56px;
+    top: calc(100vh - 58px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-chalk-100);
+    opacity: 0.7;
+  }
+  .bb-hero-steps {
+    position: absolute;
+    right: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-chalk-100);
+    opacity: 0.62;
+  }
+  .bb-hero-steps span:not(.bb-mono-label) {
+    border-top: 1px solid var(--hairline-soft);
+    padding-top: 6px;
+    min-width: 46px;
+  }
+
+  /* how it works */
+  .bb-how-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 62px;
+    line-height: 1;
+    color: var(--color-chalk-100);
+    margin: 18px 0 0;
+  }
+  .bb-step {
+    position: relative;
+    padding: 0 46px;
+  }
+  .bb-step:first-child {
+    padding-left: 0;
+  }
+  .bb-step-rule {
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--hairline-soft);
+  }
+  .bb-step-num-sm {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--color-plywood-500);
+    margin-bottom: 90px;
+  }
+  .bb-step-ghost {
+    position: absolute;
+    right: 30px;
+    top: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 130px;
+    line-height: 1;
+    color: var(--color-chalk-100);
+    opacity: 0.05;
+    pointer-events: none;
+  }
+  .bb-step-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 32px;
+    color: var(--color-chalk-100);
+    margin: 0 0 16px;
+  }
+  .bb-step-desc {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-slate-300);
+    max-width: 280px;
+    margin: 0;
+  }
+
+  /* features */
+  .bb-feature-ghost {
+    position: absolute;
+    right: 0;
+    top: -70px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 150px;
+    line-height: 1;
+    color: var(--color-chalk-100);
+    opacity: 0.05;
+  }
+  .bb-feature-img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 18px 48px rgba(20, 14, 10, 0.46);
+  }
+  .bb-feature-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1.02;
+    color: var(--color-chalk-100);
+    margin: 14px 0 20px;
+    white-space: pre-line;
+  }
+  .bb-feature-body {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--color-slate-300);
+    max-width: 440px;
+    margin: 0 0 26px;
+  }
+  .bb-chip {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 7px 13px;
+  }
+
+  /* section title (gyms) */
+  .bb-section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1.02;
+    color: var(--color-chalk-100);
+    margin: 8px 0 0;
+  }
+
+  /* gym cards */
+  .bb-gymcard {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(20, 14, 10, 0.34);
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  }
+  .bb-gymcard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 48px rgba(20, 14, 10, 0.46);
+  }
+  .bb-gymcard-img {
+    position: relative;
+    height: 210px;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .bb-gymcard:hover .bb-gymcard-img {
+    transform: scale(1.03);
+  }
+  .bb-gymcard-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(var(--scrim), 0.7), rgba(var(--scrim), 0) 55%);
+  }
+  .bb-gymcard-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-chalk-100);
+    background: rgba(var(--scrim), 0.55);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--hairline-soft);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  .bb-gymcard-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--color-chalk-100);
+    margin: 7px 0 9px;
+  }
+  .bb-gymcard-loc {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--fg-muted);
+  }
+
+  /* cta band */
+  .bb-cta {
+    position: relative;
+    background-color: var(--ply-base);
+    background-image: var(--ply-tnuts), var(--ply-grain-dark), var(--ply-grain-light), var(--ply-band);
+    background-size: 118px 112px, 340px 620px, 460px 720px, auto;
+    background-blend-mode: normal, multiply, soft-light, normal;
+  }
+  .bb-cta-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--on-accent);
+    margin: 18px 0 18px;
+  }
+  .bb-cta-sub {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    color: var(--on-accent);
+    opacity: 0.9;
+    margin: 0 0 34px;
+  }
+
+  /* footer */
+  .bb-footer-tag {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--color-slate-300);
+    margin: 20px 0 22px;
+  }
+  .bb-footer-social a {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color var(--dur-fast);
+  }
+  .bb-footer-social a:hover {
+    border-color: var(--color-plywood-500);
+  }
+  .bb-footer-col a {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--color-slate-300);
+    transition: color var(--dur-fast);
+  }
+  .bb-footer-col a:hover {
+    color: var(--color-plywood-400);
+  }
+}
+
+@media (max-width: 900px) {
+  .bb-nav {
+    padding: 18px 22px;
+  }
+  .bb-nav-links {
+    display: none;
+  }
+  .bb-hero-inner,
+  .bb-scroll-hint {
+    padding-left: 22px;
+    padding-right: 22px;
+    left: 22px;
+  }
+  .bb-hero-title {
+    font-size: 46px;
+  }
+  .bb-step {
+    padding: 0;
+  }
+  .bb-step-rule {
+    display: none;
+  }
+  .bb-step-num-sm {
+    margin-bottom: 18px;
+  }
+  .bb-hero-steps {
+    display: none;
+  }
+  .bb-cta-title,
+  .bb-how-title {
+    font-size: 44px;
+  }
 }
