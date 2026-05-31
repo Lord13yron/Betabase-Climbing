@@ -1,0 +1,182 @@
+/* ============================================================
+   BETABASE — /gyms directory redesign
+   Scoped app styles (prefix .g-), built on the brand tokens
+   already defined in app/globals.css (--color-slate-*,
+   --color-plywood-*, --accent, --hairline, --scrim, radii, …).
+   Dark "concrete slate" theme; pairs with the solid .bb-nav.is-app
+   bar from the root layout. Import once from app/gyms/page.tsx.
+   ============================================================ */
+
+/* Dark surface for the page — the rest of the app keeps its light theme, so we
+   paint the directory's own background and fill the viewport under the nav. */
+.g-directory {
+  background: var(--color-slate-800);
+  min-height: calc(100vh - 61px); /* viewport minus the solid app nav */
+  font-family: var(--font-ui);
+  color: var(--fg);
+}
+.g-wrap { max-width: 1120px; margin: 0 auto; padding: 50px 40px 80px; }
+
+/* ---------------- Page header ---------------- */
+.g-eyebrow {
+  display: inline-flex; align-items: center; gap: 14px;
+  font-family: var(--font-mono); font-weight: 500; font-size: 12px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+}
+.g-eyebrow::before { content: ""; width: 46px; height: 1px;
+  background: currentColor; opacity: 0.7; }
+.g-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 54px;
+  line-height: 1.02; letter-spacing: -0.012em; color: var(--color-chalk-50);
+  margin: 14px 0 0;
+}
+.g-title em { font-style: italic; font-weight: 600; color: var(--accent); }
+.g-sub { font-family: var(--font-ui); font-size: 17px; line-height: 1.55;
+  color: var(--color-slate-300); max-width: 470px; margin: 16px 0 0; }
+
+/* ---------------- Toolbar: search + filters + sort ---------------- */
+.g-toolbar { margin-top: 34px; display: flex; flex-direction: column; gap: 16px; }
+.g-search { position: relative; display: flex; align-items: center; }
+.g-search > svg { position: absolute; left: 16px; width: 18px; height: 18px;
+  color: var(--color-slate-400); pointer-events: none; }
+.g-search input {
+  width: 100%; background: var(--color-slate-900);
+  border: 1px solid var(--hairline); border-radius: var(--radius-md);
+  padding: 14px 16px 14px 46px; font-family: var(--font-ui); font-size: 15px;
+  color: var(--color-chalk-100); outline: none; transition: border-color var(--dur-fast);
+}
+.g-search input::placeholder { color: var(--color-slate-400); }
+.g-search input:focus { border-color: var(--accent); }
+
+.g-filters { display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; }
+.g-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.g-pill {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--color-slate-300); background: transparent;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  padding: 8px 15px; cursor: pointer; transition: color var(--dur-fast),
+  background var(--dur-fast), border-color var(--dur-fast);
+}
+.g-pill:hover { border-color: var(--color-slate-400); color: var(--color-chalk-100); }
+.g-pill.is-active { background: var(--accent); color: var(--on-accent);
+  border-color: var(--accent); }
+
+.g-tools-right { display: flex; align-items: center; gap: 16px; }
+.g-count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--color-slate-400); white-space: nowrap; }
+.g-sort {
+  position: relative; display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--color-slate-300);
+  border: 1px solid var(--hairline); border-radius: 999px;
+  padding: 8px 30px 8px 14px; cursor: pointer; transition: border-color var(--dur-fast);
+}
+.g-sort:hover { border-color: var(--color-slate-400); }
+.g-sort > svg { width: 13px; height: 13px; color: var(--color-slate-400); }
+.g-sort-value { color: var(--color-chalk-100); }
+/* The select is an invisible overlay filling the whole pill, so a click
+   anywhere on the icon/label/value opens the native dropdown. */
+.g-sort select {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  appearance: none; -webkit-appearance: none; background: transparent; border: none;
+  margin: 0; padding: 0; opacity: 0; cursor: pointer; outline: none;
+}
+.g-sort::after { content: ""; position: absolute; right: 14px; width: 6px; height: 6px;
+  border-right: 1.5px solid var(--color-slate-400);
+  border-bottom: 1.5px solid var(--color-slate-400);
+  transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+
+/* ---------------- Section headers ---------------- */
+.g-section { margin-top: 42px; }
+.g-section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.g-section-label { font-family: var(--font-mono); font-weight: 500; font-size: 12px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-chalk-100); }
+.g-section-count { font-family: var(--font-mono); font-size: 12px; color: var(--color-slate-400); }
+.g-section-rule { flex: 1; height: 1px; background: var(--hairline-soft); }
+
+/* ---------------- Photo card (2-col) ---------------- */
+.g-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+@media (max-width: 760px) { .g-grid-2 { grid-template-columns: 1fr; } }
+
+.g-card {
+  position: relative; background: var(--color-slate-700);
+  border: 1px solid var(--hairline); border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: 0 6px 18px rgba(20, 14, 10, 0.34);
+  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.g-card:hover { transform: translateY(-4px); box-shadow: 0 18px 48px rgba(20, 14, 10, 0.46); }
+.g-card-link { display: block; text-decoration: none; color: inherit; }
+.g-card-media { position: relative; height: 190px; overflow: hidden; }
+.g-card-img { position: absolute; inset: 0; background-size: cover;
+  background-position: center; transition: transform 420ms var(--ease-out); }
+.g-card:hover .g-card-img { transform: scale(1.045); }
+.g-card-grad { position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(var(--scrim), 0.82), rgba(var(--scrim), 0) 58%); }
+.g-badge {
+  position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center;
+  gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--color-chalk-100); background: rgba(var(--scrim), 0.55);
+  backdrop-filter: blur(8px); border: 1px solid var(--hairline-soft);
+  border-radius: 999px; padding: 6px 11px;
+}
+.g-badge svg { width: 13px; height: 13px; color: var(--color-plywood-400); }
+
+.g-fav {
+  position: absolute; top: 12px; right: 12px; width: 38px; height: 38px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(var(--scrim), 0.5); backdrop-filter: blur(8px);
+  border: 1px solid var(--hairline-soft); cursor: pointer; padding: 0;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.g-fav svg { width: 18px; height: 18px; color: var(--color-chalk-100); }
+.g-fav:hover { background: rgba(var(--scrim), 0.72); }
+.g-fav:disabled { opacity: 0.6; cursor: default; }
+.g-fav.is-fav { background: var(--accent); border-color: var(--accent); }
+.g-fav.is-fav svg { color: var(--on-accent); }
+
+.g-card-body { padding: 16px 18px 18px; }
+.g-card-types { font-family: var(--font-mono); font-weight: 500; font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-slate-400); }
+.g-card-name { font-family: var(--font-display); font-weight: 600; font-size: 25px;
+  color: var(--color-chalk-100); margin: 6px 0 9px; line-height: 1.05; }
+.g-card-loc { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono);
+  font-size: 12.5px; color: var(--color-slate-300); }
+.g-card-loc svg { width: 14px; height: 14px; color: var(--color-plywood-400); flex: none; }
+.g-card-foot { display: flex; align-items: center; justify-content: space-between;
+  margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--hairline-soft); }
+.g-foot-meta { font-family: var(--font-mono); font-size: 11px; color: var(--color-slate-400);
+  letter-spacing: 0.02em; }
+
+/* beta video count — community beta available, brand play glyph */
+.g-beta { display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em;
+  color: var(--color-slate-300); }
+.g-beta svg { width: 14px; height: 14px; color: var(--color-plywood-400); flex: none; }
+
+/* ---------------- Empty / no-results ---------------- */
+.g-empty {
+  margin-top: 30px; display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 76px 40px; border: 1px dashed var(--color-slate-500);
+  border-radius: var(--radius-lg);
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,0.014) 0 2px, transparent 2px 11px);
+}
+.g-empty-ic { width: 62px; height: 62px; border-radius: 50%; border: 1px solid var(--hairline);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+  background: var(--color-slate-800); }
+.g-empty-ic svg { width: 26px; height: 26px; color: var(--color-slate-400); }
+.g-empty h3 { font-family: var(--font-display); font-weight: 700; font-size: 30px;
+  color: var(--color-chalk-100); margin: 0; }
+.g-empty p { font-family: var(--font-ui); font-size: 15px; color: var(--color-slate-300);
+  max-width: 400px; margin: 13px 0 26px; line-height: 1.6; }
+.g-empty p b { color: var(--color-chalk-100); font-weight: 600; }
+.g-clear { font-family: var(--font-ui); font-weight: 600; font-size: 14px;
+  color: var(--on-accent); background: var(--accent); border: none;
+  border-radius: var(--radius-md); padding: 11px 20px; cursor: pointer;
+  transition: background var(--dur-fast); }
+.g-clear:hover { background: var(--accent-hover); }
+
+@media (max-width: 640px) {
+  .g-wrap { padding: 36px 20px 60px; }
+  .g-title { font-size: 40px; }
+}
