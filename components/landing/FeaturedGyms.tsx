@@ -22,14 +22,17 @@ type GymCardData = {
 function GymCard({ g }: { g: GymCardData }) {
   return (
     <Link href={`/gyms/${g.id}`} className="bb-gymcard">
-      <div className="bb-gymcard-img" style={{ backgroundImage: `url('${g.img}')` }}>
+      <div
+        className="bb-gymcard-img"
+        style={{ backgroundImage: `url('${g.img}')` }}
+      >
         <div className="bb-gymcard-grad" />
         <span className="bb-gymcard-badge">
           <Icon name="layers" size={13} color="var(--color-plywood-400)" />
           {g.routes} {g.routes === 1 ? "route" : "routes"}
         </span>
       </div>
-      <div className="px-[20px] pt-[18px] pb-[22px]">
+      <div className="px-5 pt-4.5 pb-5.5">
         <h3 className="bb-gymcard-name">{g.name}</h3>
         {g.city && (
           <div className="bb-gymcard-loc">
@@ -65,21 +68,22 @@ export async function FeaturedGyms() {
         routes: count ?? 0,
         img: CARD_IMAGES[i % CARD_IMAGES.length],
       };
-    })
+    }),
   );
 
   return (
-    <section className="bg-slate-800 px-[56px] py-[110px]" id="gyms">
-      <div className="mx-auto mb-[48px] flex max-w-[1200px] items-end justify-between">
+    <section className="bg-slate-800 p-16" id="gyms">
+      <div className="mx-auto mb-12 flex max-w-300 items-end justify-between">
         <div>
           <div className="bb-eyebrow">Featured gyms</div>
           <h2 className="bb-section-title">Find your home wall</h2>
         </div>
         <Link href="/gyms" className="bb-link-arrow">
-          Browse all gyms <Icon name="arrowRight" size={16} color="var(--color-plywood-400)" />
+          Browse all gyms{" "}
+          <Icon name="arrowRight" size={16} color="var(--color-plywood-400)" />
         </Link>
       </div>
-      <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-[26px] md:grid-cols-3">
+      <div className="mx-auto grid max-w-300 grid-cols-1 gap-6.5 md:grid-cols-3">
         {cards.map((g) => (
           <GymCard key={g.id} g={g} />
         ))}

@@ -14,7 +14,7 @@ const FEATURES: Feature[] = [
     kicker: "Every route",
     title: "The whole gym,\nfiltered your way",
     body: "Pull up a gym's full route list and slice it by grade, hold color, climb type, and wall. Boulder problems on the V-scale, ropes on YDS — always current with the latest set.",
-    img: "/landing/climbing-wall-hero.png",
+    img: "/landing/outside-gym.png",
     flip: true,
     meta: ["GRADE", "COLOR", "TYPE", "WALL"],
   },
@@ -40,16 +40,19 @@ const FEATURES: Feature[] = [
 
 function FeatureRow({ f }: { f: Feature }) {
   return (
-    <div className="grid grid-cols-1 items-center gap-[30px] py-[40px] md:grid-cols-2 md:gap-[80px] md:py-[60px]">
+    <div className="grid grid-cols-1 items-center gap-7.5 py-10 md:grid-cols-2 md:gap-20 md:py-15">
       <div className={f.flip ? "md:order-2" : ""}>
-        <div className="bb-feature-img" style={{ backgroundImage: `url('${f.img}')` }} />
+        <div
+          className="bb-feature-img"
+          style={{ backgroundImage: `url('${f.img}')` }}
+        />
       </div>
       <div className="relative">
         <div className="bb-feature-ghost">{f.n}</div>
         <div className="bb-eyebrow bb-eyebrow-line">{f.kicker}</div>
         <h3 className="bb-feature-title">{f.title}</h3>
         <p className="bb-feature-body">{f.body}</p>
-        <div className="flex flex-wrap gap-[8px]">
+        <div className="flex flex-wrap gap-2">
           {f.meta.map((m) => (
             <span className="bb-chip" key={m}>
               {m}
@@ -63,8 +66,8 @@ function FeatureRow({ f }: { f: Feature }) {
 
 export function Features() {
   return (
-    <section className="bg-slate-900 px-[56px] pt-[90px] pb-[70px]" id="features">
-      <div className="mx-auto max-w-[1200px]">
+    <section className="bg-slate-900 p-16" id="features">
+      <div className="mx-auto max-w-300">
         {FEATURES.map((f) => (
           <FeatureRow key={f.n} f={f} />
         ))}

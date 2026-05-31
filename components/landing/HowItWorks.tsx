@@ -18,8 +18,8 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-slate-800 px-[56px] pt-[120px] pb-[110px]" id="how">
-      <div className="mx-auto mb-[80px] max-w-[1200px]">
+    <section className="bg-slate-800 p-14" id="how">
+      <div className="mx-auto mb-20 max-w-300">
         <div className="bb-eyebrow">How it works</div>
         <h2 className="bb-how-title">
           Watch. Learn.
@@ -27,7 +27,7 @@ export function HowItWorks() {
           <span className="bb-accent-italic">Send.</span>
         </h2>
       </div>
-      <div className="mx-auto grid max-w-[1200px] grid-cols-1 md:grid-cols-3">
+      <div className="mx-auto grid max-w-300 grid-cols-1 md:grid-cols-3">
         {STEPS.map((s, i) => (
           <div className="bb-step" key={s.n}>
             {i > 0 && <div className="bb-step-rule" />}

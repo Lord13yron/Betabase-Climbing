@@ -34,7 +34,7 @@ const COLS: { h: string; links: [string, string][] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="mx-auto grid max-w-[1312px] grid-cols-1 gap-[60px] border-t border-[var(--hairline-soft)] px-[56px] pt-[80px] pb-[40px] md:grid-cols-[1.4fr_2fr]">
+    <footer className="mx-auto grid max-w-328 grid-cols-1 gap-15 border-t border-(--hairline-soft) px-14 pt-20 pb-10 md:grid-cols-[1.4fr_2fr]">
       <div>
         <Link href="/" className="bb-logo">
           <Image className="bb-logo-mark" src="/landing/logo-mark.png" alt="" width={30} height={30} />
@@ -45,7 +45,7 @@ export function SiteFooter() {
           <br />
           Community beta for every climbing gym.
         </p>
-        <div className="bb-footer-social flex gap-[14px]">
+        <div className="bb-footer-social flex gap-3.5">
           <a href="#" aria-label="Instagram">
             <Icon name="instagram" size={18} color="var(--color-slate-300)" />
           </a>
@@ -54,10 +54,10 @@ export function SiteFooter() {
           </a>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-[30px] md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-7.5 md:grid-cols-3">
         {COLS.map((c) => (
-          <div className="bb-footer-col flex flex-col gap-[14px]" key={c.h}>
-            <div className="bb-mono-label mb-[4px]">{c.h}</div>
+          <div className="bb-footer-col flex flex-col gap-3.5" key={c.h}>
+            <div className="bb-mono-label mb-1">{c.h}</div>
             {c.links.map(([label, href]) => (
               <Link href={href} key={label}>
                 {label}
@@ -66,7 +66,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="col-span-full mt-[20px] flex justify-between border-t border-[var(--hairline-soft)] pt-[34px]">
+      <div className="col-span-full mt-5 flex justify-between border-t border-(--hairline-soft) pt-8.5">
         <span className="bb-mono">© 2026 Betabase, Inc.</span>
         <span className="bb-mono">Made for climbers, by climbers.</span>
       </div>
