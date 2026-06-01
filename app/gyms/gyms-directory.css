@@ -82,7 +82,7 @@
 .g-sort-btn:focus-visible { border-color: var(--accent); }
 .g-sort-btn.is-open { border-color: var(--color-slate-400); background: var(--color-slate-700); }
 .g-sort-btn > svg { width: 13px; height: 13px; color: var(--color-slate-400); flex: none; }
-.g-sort-value { color: var(--color-chalk-100); }
+.g-sort-value { color: var(--color-chalk-100); text-transform: none; }
 .g-sort-chev {
   width: 6px; height: 6px; margin-left: 2px; flex: none;
   border-right: 1.5px solid var(--color-slate-400);
@@ -107,7 +107,7 @@
   display: block; width: 100%; text-align: left; white-space: nowrap;
   padding: 7px 12px; border: none; border-radius: 7px; background: transparent;
   font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em;
-  text-transform: uppercase; color: var(--color-slate-300); cursor: pointer;
+  color: var(--color-slate-300); cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 .g-menu-item:hover { background: var(--color-slate-700); color: var(--color-chalk-100); }
