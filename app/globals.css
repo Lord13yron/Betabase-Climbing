@@ -127,7 +127,6 @@ body {
 .bb-nav.is-app {
   position: static;
   background: var(--color-slate-900);
-  padding: 16px 56px;
   border-bottom: 1px solid var(--hairline-soft);
 }
 
