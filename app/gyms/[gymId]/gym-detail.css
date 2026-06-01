@@ -214,7 +214,7 @@
   color: var(--color-chalk-100); line-height: 1; display: inline-flex; align-items: center; gap: 6px; }
 .gd-stat-mini .n svg { width: 13px; height: 13px; color: var(--color-plywood-400); }
 .gd-stat-mini .l { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--color-slate-500); }
+  text-transform: uppercase; color: var(--color-slate-300); }
 .gd-stat-mini.muted .n { color: var(--color-slate-300); }
 .gd-stat-mini.muted .n svg { color: var(--color-slate-300); }
 
