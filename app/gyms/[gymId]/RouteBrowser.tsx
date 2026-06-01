@@ -44,6 +44,16 @@ const DISCIPLINE_ORDER: Record<Discipline, number> = {
   lead: 2,
 }
 
+// Visible label for the sort chip, keyed by `${sortKey}:${sortDir}` (matches the
+// chip's <option> values).
+const SORT_LABEL: Record<string, string> = {
+  'grade:desc': 'Grade · hardest',
+  'grade:asc': 'Grade · easiest',
+  'discipline:asc': 'Discipline',
+  'color:asc': 'Color',
+  'wall:asc': 'Wall',
+}
+
 // Named climbing-hold colors → hex (mirrors app/globals.css --color-hold-*).
 // routes.color may already be a hex string; if so we use it directly. Unknown
 // / empty colors fall back to a neutral slate band.
@@ -239,6 +249,7 @@ export function RouteBrowser({
 
           <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
             <span className="lbl">Min</span>
+            <span className="val">{discipline === 'all' ? 'Any' : activeGrades[gradeMin]}</span>
             <select
               value={gradeMin}
               disabled={discipline === 'all'}
@@ -263,6 +274,7 @@ export function RouteBrowser({
 
           <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
             <span className="lbl">Max</span>
+            <span className="val">{discipline === 'all' ? 'Any' : activeGrades[gradeMax]}</span>
             <select
               value={gradeMax}
               disabled={discipline === 'all'}
@@ -287,6 +299,7 @@ export function RouteBrowser({
 
           <span className="gd-select">
             <span className="lbl">Color</span>
+            <span className="val">{color === 'all' ? 'Any' : color}</span>
             <select value={color} aria-label="Color" onChange={(e) => setColor(e.target.value)}>
               <option value="all">Any</option>
               {colors.map((c) => (
@@ -299,6 +312,9 @@ export function RouteBrowser({
 
           <span className="gd-select">
             <span className="lbl">Wall</span>
+            <span className="val">
+              {wall === 'all' ? 'All walls' : wall === 'unassigned' ? 'Unassigned' : wallName(wall)}
+            </span>
             <select value={wall} aria-label="Wall" onChange={(e) => setWall(e.target.value)}>
               <option value="all">All walls</option>
               {walls.map((w) => (
@@ -323,6 +339,7 @@ export function RouteBrowser({
           </div>
           <span className="gd-select">
             <SlidersIcon />
+            <span className="val">{SORT_LABEL[`${sortKey}:${sortDir}`]}</span>
             <select
               value={`${sortKey}:${sortDir}`}
               aria-label="Sort routes"
