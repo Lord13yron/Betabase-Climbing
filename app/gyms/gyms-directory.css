@@ -66,27 +66,52 @@
 .g-tools-right { display: flex; align-items: center; gap: 16px; }
 .g-count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--color-slate-400); white-space: nowrap; }
-.g-sort {
-  position: relative; display: inline-flex; align-items: center; gap: 9px;
+/* sort chip — a custom dropdown (pill button + themed animated popover) so the
+   options match the brand, unlike a native <select>. */
+.g-sort { position: relative; display: inline-block; }
+.g-sort-btn {
+  display: inline-flex; align-items: center; gap: 9px; width: 100%;
   font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em;
-  text-transform: uppercase; color: var(--color-slate-300);
+  text-transform: uppercase; color: var(--color-slate-300); background: transparent;
   border: 1px solid var(--hairline); border-radius: 999px;
-  padding: 8px 30px 8px 14px; cursor: pointer; transition: border-color var(--dur-fast);
+  padding: 8px 14px; cursor: pointer; outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
-.g-sort:hover { border-color: var(--color-slate-400); }
-.g-sort > svg { width: 13px; height: 13px; color: var(--color-slate-400); }
+.g-sort-btn:hover { border-color: var(--color-slate-400); }
+.g-sort-btn:focus-visible { border-color: var(--accent); }
+.g-sort-btn.is-open { border-color: var(--color-slate-400); background: var(--color-slate-700); }
+.g-sort-btn > svg { width: 13px; height: 13px; color: var(--color-slate-400); flex: none; }
 .g-sort-value { color: var(--color-chalk-100); }
-/* The select is an invisible overlay filling the whole pill, so a click
-   anywhere on the icon/label/value opens the native dropdown. */
-.g-sort select {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  appearance: none; -webkit-appearance: none; background: transparent; border: none;
-  margin: 0; padding: 0; opacity: 0; cursor: pointer; outline: none;
-}
-.g-sort::after { content: ""; position: absolute; right: 14px; width: 6px; height: 6px;
+.g-sort-chev {
+  width: 6px; height: 6px; margin-left: 2px; flex: none;
   border-right: 1.5px solid var(--color-slate-400);
   border-bottom: 1.5px solid var(--color-slate-400);
-  transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.g-sort-btn.is-open .g-sort-chev { transform: translateY(1px) rotate(225deg); }
+
+.g-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  min-width: 100%; display: flex; flex-direction: column; gap: 1px; padding: 5px;
+  background: var(--color-slate-800); border: 1px solid var(--hairline);
+  border-radius: var(--radius-md); box-shadow: 0 14px 36px rgba(var(--scrim), 0.5);
+  opacity: 0; transform: translateY(-4px) scale(0.97); transform-origin: top right;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.g-menu.is-open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.g-menu-item {
+  display: block; width: 100%; text-align: left; white-space: nowrap;
+  padding: 7px 12px; border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--color-slate-300); cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.g-menu-item:hover { background: var(--color-slate-700); color: var(--color-chalk-100); }
+.g-menu-item.is-sel { color: var(--accent); }
 
 /* ---------------- Section headers ---------------- */
 .g-section { margin-top: 42px; }

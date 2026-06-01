@@ -141,33 +141,59 @@
 .gd-pill .ct { opacity: 0.6; font-size: 11px; }
 .gd-pill.is-active .ct { opacity: 0.7; }
 
-/* select chip — wraps a native <select> styled as a pill */
-.gd-select {
-  position: relative; display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--hairline); border-radius: 999px;
-  padding: 8px 30px 8px 13px; cursor: pointer; white-space: nowrap;
+/* select chip — a custom dropdown (pill button + styled popover menu) so the
+   options can be themed and animated, unlike a native <select>. */
+.gd-select { position: relative; display: inline-block; }
+
+/* the pill the user clicks */
+.gd-select-btn {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%;
+  border: 1px solid var(--hairline); border-radius: 999px; background: transparent;
+  padding: 8px 13px; cursor: pointer; white-space: nowrap;
   font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em;
-  color: var(--color-slate-300); transition: border-color var(--dur-fast), color var(--dur-fast);
+  color: var(--color-slate-300); outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
-.gd-select:hover { border-color: var(--color-slate-400); }
-.gd-select.is-disabled { opacity: 0.45; }
-.gd-select.is-disabled:hover { border-color: var(--hairline); }
-.gd-select > svg { width: 13px; height: 13px; color: var(--color-slate-400); flex: none; }
-.gd-select .lbl { color: var(--color-slate-500); text-transform: uppercase; letter-spacing: 0.1em; }
-.gd-select .val { color: var(--color-chalk-100); }
-/* The native <select> is laid invisible over the whole pill so a click anywhere
-   in the chip opens it; the chosen value is shown by the .val span beneath. */
-.gd-select select {
-  appearance: none; -webkit-appearance: none; background: transparent; border: none;
-  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0;
-  color: transparent; font: inherit; cursor: pointer; outline: none;
-}
-.gd-select select:disabled { cursor: default; }
-.gd-select select option { background: var(--color-slate-800); color: var(--color-chalk-100); }
-.gd-select::after { content: ""; position: absolute; right: 14px; width: 6px; height: 6px;
+.gd-select-btn:hover { border-color: var(--color-slate-400); }
+.gd-select-btn:focus-visible { border-color: var(--accent); }
+.gd-select-btn.is-open { border-color: var(--color-slate-400); background: var(--color-slate-700); }
+.gd-select-btn:disabled { opacity: 0.45; cursor: default; }
+.gd-select-btn:disabled:hover { border-color: var(--hairline); }
+.gd-select-btn > svg { width: 13px; height: 13px; color: var(--color-slate-400); flex: none; }
+.gd-select-btn .lbl { color: var(--color-slate-500); text-transform: uppercase; letter-spacing: 0.1em; }
+.gd-select-btn .val { color: var(--color-chalk-100); }
+.gd-select-btn .chev {
+  width: 6px; height: 6px; margin-left: 2px; flex: none;
   border-right: 1.5px solid var(--color-slate-400);
   border-bottom: 1.5px solid var(--color-slate-400);
-  transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.gd-select-btn.is-open .chev { transform: translateY(1px) rotate(225deg); }
+
+/* the popover menu */
+.gd-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+  min-width: 100%; max-height: 300px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px; padding: 5px;
+  background: var(--color-slate-800); border: 1px solid var(--hairline);
+  border-radius: var(--radius-md); box-shadow: 0 14px 36px rgba(var(--scrim), 0.5);
+  opacity: 0; transform: translateY(-4px) scale(0.97); transform-origin: top left;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.gd-menu.is-open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.gd-menu-item {
+  display: block; width: 100%; text-align: left; white-space: nowrap;
+  padding: 7px 12px; border: none; border-radius: 7px; background: transparent;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em;
+  color: var(--color-slate-300); cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.gd-menu-item:hover { background: var(--color-slate-700); color: var(--color-chalk-100); }
+.gd-menu-item.is-sel { color: var(--accent); }
 
 /* name-filter search (optional, additive to the existing filters) */
 .gd-search { position: relative; display: flex; align-items: center; }

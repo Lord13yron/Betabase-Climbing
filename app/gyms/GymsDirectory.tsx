@@ -54,9 +54,27 @@ export function GymsDirectory({
   const [value, setValue] = useState(query)
   const [discipline, setDiscipline] = useState<DisciplineFilter>('all')
   const [sort, setSort] = useState<SortKey>('name')
+  const [sortOpen, setSortOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sortRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+
+  useEffect(() => {
+    if (!sortOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSortOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [sortOpen])
 
   function onSearch(next: string) {
     setValue(next)
@@ -126,24 +144,44 @@ export function GymsDirectory({
             </div>
             <div className="g-tools-right">
               <span className="g-count">{filtered.length} gyms</span>
-              <label className="g-sort">
-                <SlidersIcon />
-                <span className="g-sort-label">Sort</span>
-                <span className="g-sort-value">
-                  {SORTS.find((s) => s.key === sort)?.label}
-                </span>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortKey)}
+              <div className="g-sort" ref={sortRef}>
+                <button
+                  type="button"
+                  className={'g-sort-btn' + (sortOpen ? ' is-open' : '')}
+                  aria-haspopup="listbox"
+                  aria-expanded={sortOpen}
+                  aria-label="Sort gyms"
+                  onClick={() => setSortOpen((o) => !o)}
+                >
+                  <SlidersIcon />
+                  <span className="g-sort-label">Sort</span>
+                  <span className="g-sort-value">
+                    {SORTS.find((s) => s.key === sort)?.label}
+                  </span>
+                  <span className="g-sort-chev" aria-hidden="true" />
+                </button>
+                <div
+                  className={'g-menu' + (sortOpen ? ' is-open' : '')}
+                  role="listbox"
                   aria-label="Sort gyms"
                 >
                   {SORTS.map((s) => (
-                    <option key={s.key} value={s.key}>
+                    <button
+                      key={s.key}
+                      type="button"
+                      role="option"
+                      aria-selected={s.key === sort}
+                      className={'g-menu-item' + (s.key === sort ? ' is-sel' : '')}
+                      onClick={() => {
+                        setSort(s.key)
+                        setSortOpen(false)
+                      }}
+                    >
                       {s.label}
-                    </option>
+                    </button>
                   ))}
-                </select>
-              </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>

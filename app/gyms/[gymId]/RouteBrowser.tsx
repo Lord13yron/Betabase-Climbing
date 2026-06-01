@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { type Discipline, gradesForDiscipline } from '@/lib/grades'
 import { FavoriteHeart } from './FavoriteHeart'
@@ -44,14 +44,93 @@ const DISCIPLINE_ORDER: Record<Discipline, number> = {
   lead: 2,
 }
 
-// Visible label for the sort chip, keyed by `${sortKey}:${sortDir}` (matches the
-// chip's <option> values).
-const SORT_LABEL: Record<string, string> = {
-  'grade:desc': 'Grade · hardest',
-  'grade:asc': 'Grade · easiest',
-  'discipline:asc': 'Discipline',
-  'color:asc': 'Color',
-  'wall:asc': 'Wall',
+// Sort chip options, keyed by `${sortKey}:${sortDir}`.
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: 'grade:desc', label: 'Grade · hardest' },
+  { value: 'grade:asc', label: 'Grade · easiest' },
+  { value: 'discipline:asc', label: 'Discipline' },
+  { value: 'color:asc', label: 'Color' },
+  { value: 'wall:asc', label: 'Wall' },
+]
+
+// Custom dropdown used by the toolbar's filter/sort chips — a pill button plus a
+// themed, animated popover menu (the native <select> popup can't be styled). The
+// chosen value shows on the pill; the menu closes on select, outside-click, or
+// Escape.
+type SelectOption = { value: string; label: string }
+function SelectChip({
+  label,
+  icon,
+  value,
+  options,
+  onChange,
+  disabled = false,
+  ariaLabel,
+}: {
+  label?: string
+  icon?: ReactNode
+  value: string
+  options: SelectOption[]
+  onChange: (value: string) => void
+  disabled?: boolean
+  ariaLabel: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const current = options.find((o) => o.value === value)
+
+  return (
+    <div className="gd-select" ref={ref}>
+      <button
+        type="button"
+        className={'gd-select-btn' + (open ? ' is-open' : '')}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {icon}
+        {label && <span className="lbl">{label}</span>}
+        <span className="val">{current?.label ?? ''}</span>
+        <span className="chev" aria-hidden="true" />
+      </button>
+      <div className={'gd-menu' + (open ? ' is-open' : '')} role="listbox" aria-label={ariaLabel}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="option"
+            aria-selected={o.value === value}
+            className={'gd-menu-item' + (o.value === value ? ' is-sel' : '')}
+            onClick={() => {
+              onChange(o.value)
+              setOpen(false)
+            }}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 // Named climbing-hold colors → hex (mirrors app/globals.css --color-hold-*).
@@ -247,84 +326,62 @@ export function RouteBrowser({
             </button>
           ))}
 
-          <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
-            <span className="lbl">Min</span>
-            <span className="val">{discipline === 'all' ? 'Any' : activeGrades[gradeMin]}</span>
-            <select
-              value={gradeMin}
-              disabled={discipline === 'all'}
-              aria-label="Minimum grade"
-              onChange={(e) => {
-                const next = Number(e.target.value)
-                setGradeMin(next)
-                if (next > gradeMax) setGradeMax(next)
-              }}
-            >
-              {discipline === 'all' ? (
-                <option value={0}>Any</option>
-              ) : (
-                activeGrades.map((g, i) => (
-                  <option key={g} value={i}>
-                    {g}
-                  </option>
-                ))
-              )}
-            </select>
-          </span>
+          <SelectChip
+            label="Min"
+            ariaLabel="Minimum grade"
+            disabled={discipline === 'all'}
+            value={String(gradeMin)}
+            options={
+              discipline === 'all'
+                ? [{ value: '0', label: 'Any' }]
+                : activeGrades.map((g, i) => ({ value: String(i), label: g }))
+            }
+            onChange={(v) => {
+              const next = Number(v)
+              setGradeMin(next)
+              if (next > gradeMax) setGradeMax(next)
+            }}
+          />
 
-          <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
-            <span className="lbl">Max</span>
-            <span className="val">{discipline === 'all' ? 'Any' : activeGrades[gradeMax]}</span>
-            <select
-              value={gradeMax}
-              disabled={discipline === 'all'}
-              aria-label="Maximum grade"
-              onChange={(e) => {
-                const next = Number(e.target.value)
-                setGradeMax(next)
-                if (next < gradeMin) setGradeMin(next)
-              }}
-            >
-              {discipline === 'all' ? (
-                <option value={0}>Any</option>
-              ) : (
-                activeGrades.map((g, i) => (
-                  <option key={g} value={i}>
-                    {g}
-                  </option>
-                ))
-              )}
-            </select>
-          </span>
+          <SelectChip
+            label="Max"
+            ariaLabel="Maximum grade"
+            disabled={discipline === 'all'}
+            value={String(gradeMax)}
+            options={
+              discipline === 'all'
+                ? [{ value: '0', label: 'Any' }]
+                : activeGrades.map((g, i) => ({ value: String(i), label: g }))
+            }
+            onChange={(v) => {
+              const next = Number(v)
+              setGradeMax(next)
+              if (next < gradeMin) setGradeMin(next)
+            }}
+          />
 
-          <span className="gd-select">
-            <span className="lbl">Color</span>
-            <span className="val">{color === 'all' ? 'Any' : color}</span>
-            <select value={color} aria-label="Color" onChange={(e) => setColor(e.target.value)}>
-              <option value="all">Any</option>
-              {colors.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </span>
+          <SelectChip
+            label="Color"
+            ariaLabel="Color"
+            value={color}
+            options={[
+              { value: 'all', label: 'Any' },
+              ...colors.map((c) => ({ value: c, label: c })),
+            ]}
+            onChange={(v) => setColor(v)}
+          />
 
-          <span className="gd-select">
-            <span className="lbl">Wall</span>
-            <span className="val">
-              {wall === 'all' ? 'All walls' : wall === 'unassigned' ? 'Unassigned' : wallName(wall)}
-            </span>
-            <select value={wall} aria-label="Wall" onChange={(e) => setWall(e.target.value)}>
-              <option value="all">All walls</option>
-              {walls.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-              <option value="unassigned">Unassigned</option>
-            </select>
-          </span>
+          <SelectChip
+            label="Wall"
+            ariaLabel="Wall"
+            value={wall}
+            options={[
+              { value: 'all', label: 'All walls' },
+              ...walls.map((w) => ({ value: w.id, label: w.name })),
+              { value: 'unassigned', label: 'Unassigned' },
+            ]}
+            onChange={(v) => setWall(v)}
+          />
         </div>
 
         <div className="gd-tb-right">
@@ -337,25 +394,17 @@ export function RouteBrowser({
               aria-label="Filter routes by name"
             />
           </div>
-          <span className="gd-select">
-            <SlidersIcon />
-            <span className="val">{SORT_LABEL[`${sortKey}:${sortDir}`]}</span>
-            <select
-              value={`${sortKey}:${sortDir}`}
-              aria-label="Sort routes"
-              onChange={(e) => {
-                const [k, d] = e.target.value.split(':') as [SortKey, 'asc' | 'desc']
-                setSortKey(k)
-                setSortDir(d)
-              }}
-            >
-              <option value="grade:desc">Grade · hardest</option>
-              <option value="grade:asc">Grade · easiest</option>
-              <option value="discipline:asc">Discipline</option>
-              <option value="color:asc">Color</option>
-              <option value="wall:asc">Wall</option>
-            </select>
-          </span>
+          <SelectChip
+            icon={<SlidersIcon />}
+            ariaLabel="Sort routes"
+            value={`${sortKey}:${sortDir}`}
+            options={SORT_OPTIONS}
+            onChange={(v) => {
+              const [k, d] = v.split(':') as [SortKey, 'asc' | 'desc']
+              setSortKey(k)
+              setSortDir(d)
+            }}
+          />
         </div>
       </div>
 
