@@ -3,8 +3,11 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { type Discipline, gradesForDiscipline } from '@/lib/grades'
-import { FavoriteToggle } from '@/components/FavoriteToggle'
+import { FavoriteHeart } from './FavoriteHeart'
+import { PlayCircleIcon, SearchIcon, SlidersIcon, MountainIcon, PlusIcon } from './icons'
 
+// A route enriched on the server with community counts + a display-ready
+// "set" label (computed server-side so there's no hydration mismatch).
 type Route = {
   id: string
   name: string
@@ -14,6 +17,9 @@ type Route = {
   grade_order: number
   wall_id: string | null
   set_date: string | null
+  beta: number // ready beta-video count
+  sends: number // total sends
+  setLabel: string | null // e.g. "today", "3d ago", "2w ago"
 }
 
 type Wall = {
@@ -38,24 +44,51 @@ const DISCIPLINE_ORDER: Record<Discipline, number> = {
   lead: 2,
 }
 
-const SELECT_CLASS =
-  'rounded border border-foreground/20 bg-transparent px-3 py-2 text-sm'
+// Named climbing-hold colors → hex (mirrors app/globals.css --color-hold-*).
+// routes.color may already be a hex string; if so we use it directly. Unknown
+// / empty colors fall back to a neutral slate band.
+const HOLD: Record<string, string> = {
+  red: '#d6453b',
+  orange: '#e5743a',
+  yellow: '#edb23a',
+  green: '#4e9d5b',
+  teal: '#2e93ae',
+  blue: '#3e6fb3',
+  purple: '#7e5ca8',
+  pink: '#d85b9a',
+  black: '#2a2521',
+  white: '#f2eee6',
+}
+// Dark ink on light holds; light ink on everything else.
+const LIGHT_INK_FOR = new Set(['yellow', 'white', 'orange'])
+
+function holdColor(color: string | null): string {
+  if (!color) return 'var(--color-slate-600)'
+  const key = color.trim().toLowerCase()
+  if (key.startsWith('#')) return key
+  return HOLD[key] ?? 'var(--color-slate-600)'
+}
+function holdInk(color: string | null): string {
+  const key = (color ?? '').trim().toLowerCase()
+  return LIGHT_INK_FOR.has(key) ? '#2a2521' : '#f6f2ea'
+}
 
 export function RouteBrowser({
   routes,
   walls,
   favoritedRouteIds,
   canFavorite,
+  canManage,
+  gymId,
 }: {
   routes: Route[]
   walls: Wall[]
   favoritedRouteIds: string[]
   canFavorite: boolean
+  canManage: boolean
+  gymId: string
 }) {
-  const favorited = useMemo(
-    () => new Set(favoritedRouteIds),
-    [favoritedRouteIds]
-  )
+  const favorited = useMemo(() => new Set(favoritedRouteIds), [favoritedRouteIds])
   const [discipline, setDiscipline] = useState<'all' | Discipline>('all')
   const [gradeMin, setGradeMin] = useState(0)
   const [gradeMax, setGradeMax] = useState(0)
@@ -63,6 +96,7 @@ export function RouteBrowser({
   const [wall, setWall] = useState<'all' | 'unassigned' | string>('all')
   const [sortKey, setSortKey] = useState<SortKey>('grade')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [query, setQuery] = useState('')
 
   const colors = useMemo(
     () =>
@@ -76,6 +110,16 @@ export function RouteBrowser({
     () => (discipline === 'all' ? [] : gradesForDiscipline(discipline)),
     [discipline]
   )
+
+  // Per-discipline counts for the filter pills.
+  const disciplineCounts = useMemo(() => {
+    const c = { all: routes.length, boulder: 0, top_rope: 0, lead: 0 } as Record<
+      'all' | Discipline,
+      number
+    >
+    for (const r of routes) c[r.discipline] += 1
+    return c
+  }, [routes])
 
   const wallName = useMemo(() => {
     const map = new Map(walls.map((w) => [w.id, w.name]))
@@ -96,7 +140,17 @@ export function RouteBrowser({
     }
   }
 
+  function clearFilters() {
+    setDiscipline('all')
+    setGradeMin(0)
+    setGradeMax(0)
+    setColor('all')
+    setWall('all')
+    setQuery('')
+  }
+
   const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
     const filtered = routes.filter((r) => {
       if (discipline !== 'all') {
         if (r.discipline !== discipline) return false
@@ -108,6 +162,7 @@ export function RouteBrowser({
       } else if (wall !== 'all') {
         if (r.wall_id !== wall) return false
       }
+      if (q && !r.name.toLowerCase().includes(q)) return false
       return true
     })
 
@@ -133,175 +188,223 @@ export function RouteBrowser({
     })
 
     return filtered
-  }, [routes, discipline, gradeMin, gradeMax, color, wall, sortKey, sortDir])
+  }, [routes, discipline, gradeMin, gradeMax, color, wall, sortKey, sortDir, query])
+
+  // Brand-new gym with no routes at all → full empty-state card.
+  if (routes.length === 0) {
+    return (
+      <div className="gd-empty">
+        <div className="gd-empty-ic">
+          <MountainIcon />
+        </div>
+        <h3>No routes set yet</h3>
+        <p>
+          This gym hasn&apos;t published any routes. Once the setters log their first
+          problems, they&apos;ll show up here with grades, beta, and sends.
+        </p>
+        {canManage ? (
+          <Link className="gd-empty-cta" href={`/gyms/${gymId}/manage`}>
+            <PlusIcon />
+            Add the first route
+          </Link>
+        ) : (
+          <span className="gd-empty-soon">Check back soon</span>
+        )}
+      </div>
+    )
+  }
+
+  const DISCIPLINE_PILLS: ['all' | Discipline, string][] = [
+    ['all', 'All'],
+    ['boulder', 'Boulder'],
+    ['lead', 'Lead'],
+    ['top_rope', 'Top-rope'],
+  ]
 
   return (
     <div>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Discipline</span>
-          <select
-            className={SELECT_CLASS}
-            value={discipline}
-            onChange={(e) =>
-              onDisciplineChange(e.target.value as 'all' | Discipline)
-            }
-          >
-            <option value="all">All</option>
-            <option value="boulder">Boulder</option>
-            <option value="top_rope">Top rope</option>
-            <option value="lead">Lead</option>
-          </select>
-        </label>
+      <div className="gd-toolbar">
+        <div className="gd-tb-left">
+          {DISCIPLINE_PILLS.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={'gd-pill' + (discipline === value ? ' is-active' : '')}
+              onClick={() => onDisciplineChange(value)}
+            >
+              {label}
+              <span className="ct">{disciplineCounts[value]}</span>
+            </button>
+          ))}
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Grade min</span>
-          <select
-            className={SELECT_CLASS}
-            value={gradeMin}
-            disabled={discipline === 'all'}
-            onChange={(e) => {
-              const next = Number(e.target.value)
-              setGradeMin(next)
-              if (next > gradeMax) setGradeMax(next)
-            }}
-          >
-            {discipline === 'all' ? (
-              <option value={0}>Any</option>
-            ) : (
-              activeGrades.map((g, i) => (
-                <option key={g} value={i}>
-                  {g}
+          <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
+            <span className="lbl">Min</span>
+            <select
+              value={gradeMin}
+              disabled={discipline === 'all'}
+              aria-label="Minimum grade"
+              onChange={(e) => {
+                const next = Number(e.target.value)
+                setGradeMin(next)
+                if (next > gradeMax) setGradeMax(next)
+              }}
+            >
+              {discipline === 'all' ? (
+                <option value={0}>Any</option>
+              ) : (
+                activeGrades.map((g, i) => (
+                  <option key={g} value={i}>
+                    {g}
+                  </option>
+                ))
+              )}
+            </select>
+          </span>
+
+          <span className={'gd-select' + (discipline === 'all' ? ' is-disabled' : '')}>
+            <span className="lbl">Max</span>
+            <select
+              value={gradeMax}
+              disabled={discipline === 'all'}
+              aria-label="Maximum grade"
+              onChange={(e) => {
+                const next = Number(e.target.value)
+                setGradeMax(next)
+                if (next < gradeMin) setGradeMin(next)
+              }}
+            >
+              {discipline === 'all' ? (
+                <option value={0}>Any</option>
+              ) : (
+                activeGrades.map((g, i) => (
+                  <option key={g} value={i}>
+                    {g}
+                  </option>
+                ))
+              )}
+            </select>
+          </span>
+
+          <span className="gd-select">
+            <span className="lbl">Color</span>
+            <select value={color} aria-label="Color" onChange={(e) => setColor(e.target.value)}>
+              <option value="all">Any</option>
+              {colors.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
-              ))
-            )}
-          </select>
-        </label>
+              ))}
+            </select>
+          </span>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Grade max</span>
-          <select
-            className={SELECT_CLASS}
-            value={gradeMax}
-            disabled={discipline === 'all'}
-            onChange={(e) => {
-              const next = Number(e.target.value)
-              setGradeMax(next)
-              if (next < gradeMin) setGradeMin(next)
-            }}
-          >
-            {discipline === 'all' ? (
-              <option value={0}>Any</option>
-            ) : (
-              activeGrades.map((g, i) => (
-                <option key={g} value={i}>
-                  {g}
+          <span className="gd-select">
+            <span className="lbl">Wall</span>
+            <select value={wall} aria-label="Wall" onChange={(e) => setWall(e.target.value)}>
+              <option value="all">All walls</option>
+              {walls.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
                 </option>
-              ))
-            )}
-          </select>
-        </label>
+              ))}
+              <option value="unassigned">Unassigned</option>
+            </select>
+          </span>
+        </div>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Color</span>
-          <select
-            className={SELECT_CLASS}
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-          >
-            <option value="all">All</option>
-            {colors.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Wall</span>
-          <select
-            className={SELECT_CLASS}
-            value={wall}
-            onChange={(e) => setWall(e.target.value)}
-          >
-            <option value="all">All walls</option>
-            {walls.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-            <option value="unassigned">Unassigned</option>
-          </select>
-        </label>
-
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-foreground/70">Sort by</span>
-          <select
-            className={SELECT_CLASS}
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-          >
-            <option value="grade">Grade</option>
-            <option value="color">Color</option>
-            <option value="discipline">Discipline</option>
-            <option value="wall">Wall</option>
-          </select>
-        </label>
-
-        <button
-          type="button"
-          onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-          className="rounded border border-foreground/20 px-3 py-2 text-sm hover:bg-foreground/5"
-          aria-label="Toggle sort direction"
-        >
-          {sortDir === 'asc' ? 'Asc ↑' : 'Desc ↓'}
-        </button>
+        <div className="gd-tb-right">
+          <div className="gd-search">
+            <SearchIcon />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Filter routes"
+              aria-label="Filter routes by name"
+            />
+          </div>
+          <span className="gd-select">
+            <SlidersIcon />
+            <select
+              value={`${sortKey}:${sortDir}`}
+              aria-label="Sort routes"
+              onChange={(e) => {
+                const [k, d] = e.target.value.split(':') as [SortKey, 'asc' | 'desc']
+                setSortKey(k)
+                setSortDir(d)
+              }}
+            >
+              <option value="grade:desc">Grade · hardest</option>
+              <option value="grade:asc">Grade · easiest</option>
+              <option value="discipline:asc">Discipline</option>
+              <option value="color:asc">Color</option>
+              <option value="wall:asc">Wall</option>
+            </select>
+          </span>
+        </div>
       </div>
 
-      {routes.length === 0 ? (
-        <p className="mt-6 text-sm text-foreground/70">No routes yet.</p>
-      ) : visible.length === 0 ? (
-        <p className="mt-6 text-sm text-foreground/70">
-          No routes match these filters.
-        </p>
-      ) : (
-        <ul className="mt-6 flex flex-col gap-3">
-          {visible.map((r) => (
-            <li
-              key={r.id}
-              className="flex items-center gap-2 rounded border border-foreground/20 pr-3 hover:bg-foreground/5"
-            >
-              <Link href={`/routes/${r.id}`} className="block flex-1 px-4 py-3">
-                <span className="font-medium">{r.name}</span>
-                <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/70">
-                  <span className="font-medium text-foreground">
-                    {r.grade_label}
-                  </span>
-                  <span>{DISCIPLINE_LABEL[r.discipline]}</span>
-                  {r.color && (
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full border border-foreground/20"
-                        style={{ backgroundColor: r.color }}
-                      />
-                      {r.color}
+      <div className="gd-list">
+        {visible.length === 0 ? (
+          <p className="gd-noresults">
+            No routes match these filters.
+            <button type="button" onClick={clearFilters}>
+              Clear filters
+            </button>
+          </p>
+        ) : (
+          <div className="gd-clist">
+            {visible.map((r) => {
+              const band = holdColor(r.color)
+              const ink = holdInk(r.color)
+              return (
+                <Link key={r.id} href={`/routes/${r.id}`} className="gd-crow">
+                  <div className="gd-cband" style={{ background: band }}>
+                    <span className="g" style={{ color: ink }}>
+                      {r.grade_label}
                     </span>
-                  )}
-                  <span>{wallName(r.wall_id)}</span>
-                </span>
-              </Link>
-              {canFavorite && (
-                <FavoriteToggle
-                  kind="route"
-                  id={r.id}
-                  favorited={favorited.has(r.id)}
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+                    {r.color && (
+                      <span className="col" style={{ color: ink }}>
+                        {r.color}
+                      </span>
+                    )}
+                  </div>
+                  <div className="gd-crow-body">
+                    <div className="gd-crow-l">
+                      <div className="gd-crow-name">{r.name}</div>
+                      <div className="gd-crow-meta">
+                        <span>{DISCIPLINE_LABEL[r.discipline]}</span>
+                        <span className="dot" />
+                        <span>{wallName(r.wall_id)}</span>
+                        {r.setLabel && (
+                          <>
+                            <span className="dot" />
+                            <span>Set {r.setLabel}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="gd-crow-r">
+                      <div className={'gd-stat-mini' + (r.beta === 0 ? ' muted' : '')}>
+                        <span className="n">
+                          <PlayCircleIcon />
+                          {r.beta}
+                        </span>
+                        <span className="l">Beta</span>
+                      </div>
+                      <div className="gd-stat-mini sends muted">
+                        <span className="n">{r.sends}</span>
+                        <span className="l">Sends</span>
+                      </div>
+                      {canFavorite && (
+                        <FavoriteHeart kind="route" id={r.id} favorited={favorited.has(r.id)} />
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
