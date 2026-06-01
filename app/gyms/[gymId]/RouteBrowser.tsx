@@ -390,7 +390,7 @@ export function RouteBrowser({
                         </span>
                         <span className="l">Beta</span>
                       </div>
-                      <div className="gd-stat-mini sends muted">
+                      <div className={'gd-stat-mini sends' + (r.sends === 0 ? ' muted' : '')}>
                         <span className="n">{r.sends}</span>
                         <span className="l">Sends</span>
                       </div>

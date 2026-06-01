@@ -215,8 +215,8 @@
 .gd-stat-mini .n svg { width: 13px; height: 13px; color: var(--color-plywood-400); }
 .gd-stat-mini .l { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--color-slate-500); }
-.gd-stat-mini.muted .n { color: var(--color-slate-400); }
-.gd-stat-mini.muted .n svg { color: var(--color-slate-400); }
+.gd-stat-mini.muted .n { color: var(--color-slate-300); }
+.gd-stat-mini.muted .n svg { color: var(--color-slate-300); }
 
 /* per-row favorite heart */
 .gd-heart { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--hairline);
