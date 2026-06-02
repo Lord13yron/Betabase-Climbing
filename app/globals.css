@@ -376,6 +376,9 @@ body {
     color: var(--color-chalk-50);
     margin: 0 0 24px;
   }
+  .bb-hero-br-mobile {
+    display: none;
+  }
   .bb-hero-sub {
     font-family: var(--font-ui);
     font-size: 18px;
@@ -666,10 +669,18 @@ body {
   .bb-scroll-hint {
     padding-left: 22px;
     padding-right: 22px;
+  }
+  .bb-scroll-hint {
     left: 22px;
   }
   .bb-hero-title {
     font-size: 46px;
+  }
+  .bb-hero-title .whitespace-nowrap {
+    white-space: normal;
+  }
+  .bb-hero-br-mobile {
+    display: block;
   }
   .bb-step {
     padding: 0;
@@ -686,5 +697,11 @@ body {
   .bb-cta-title,
   .bb-how-title {
     font-size: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bb-hero-title {
+    font-size: 38px;
   }
 }

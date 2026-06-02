@@ -8,7 +8,13 @@ import MuxUploader from '@mux/mux-uploader-react'
 // API to mint a Mux direct-upload URL (and create the pending row), then
 // <MuxUploader> pushes the file straight to Mux. On success we refresh so the
 // new "Processing…" card appears.
-export function BetaUploader({ routeId }: { routeId: string }) {
+export function BetaUploader({
+  routeId,
+  onUploaded,
+}: {
+  routeId: string
+  onUploaded?: () => void
+}) {
   const router = useRouter()
   const [caption, setCaption] = useState('')
 
@@ -42,6 +48,7 @@ export function BetaUploader({ routeId }: { routeId: string }) {
         onSuccess={() => {
           setCaption('')
           router.refresh()
+          onUploaded?.()
         }}
       />
     </div>

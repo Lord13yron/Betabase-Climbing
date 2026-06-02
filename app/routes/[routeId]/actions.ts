@@ -147,3 +147,12 @@ export async function deleteCommentAction(
   revalidatePath(`/routes/${revalidateRouteId}`)
   return { ok: true }
 }
+
+// Record a play of a beta clip. Open to anyone (views are public) and routed
+// through the increment_video_view RPC so anonymous viewers can bump the counter
+// without UPDATE rights on videos. The client dedupes to one call per session
+// per clip, so we don't revalidate — the new count shows on the next load.
+export async function incrementVideoViewAction(videoId: string): Promise<void> {
+  const supabase = await createClient()
+  await supabase.rpc('increment_video_view', { vid: videoId })
+}

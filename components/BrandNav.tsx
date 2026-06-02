@@ -66,18 +66,18 @@ export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
       <div className="bb-nav-right">
         {isAuthed ? (
           <>
+            <form action={signOutAction}>
+              <button type="submit" className="bb-btn bb-btn-primary bb-btn-sm">
+                Sign out
+              </button>
+            </form>
             <Link
               href="/profile"
               className="bb-nav-login flex items-center gap-2"
             >
               <Avatar src={avatarUrl} name={username} size={28} />
-              <span>{username}</span>
+              <span className="hidden sm:inline">{username}</span>
             </Link>
-            <form action={signOutAction}>
-              <button type="submit" className="bb-nav-login">
-                Sign out
-              </button>
-            </form>
           </>
         ) : (
           <>
