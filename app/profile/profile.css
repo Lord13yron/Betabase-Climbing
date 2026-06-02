@@ -29,10 +29,17 @@
   object-fit: cover; border: 1px solid rgba(255,255,255,0.16); box-shadow: 0 6px 18px rgba(20,14,10,0.34); }
 
 /* ---- compact hero ---- */
-.pf-chero { display: flex; align-items: center; gap: 20px; padding: 44px 0 0; }
-.pf-chero-id { flex: 1; min-width: 0; }
-.pf-chero-id .pf-handle-row { margin-top: 10px; }
-.pf-chero-actions { flex: none; display: flex; gap: 10px; }
+.pf-chero { display: grid; align-items: center; column-gap: 20px; padding: 44px 0 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "avatar eyebrow actions"
+    "avatar name    actions"
+    "avatar handle  actions"; }
+.pf-chero > .pf-mono, .pf-chero > .pf-photo { grid-area: avatar; }
+.pf-chero > .pf-eyebrow { grid-area: eyebrow; }
+.pf-chero > .pf-name { grid-area: name; }
+.pf-chero > .pf-handle-row { grid-area: handle; margin-top: 10px; }
+.pf-chero-actions { grid-area: actions; display: flex; gap: 10px; }
 .pf-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-family: var(--font-mono);
   font-weight: 500; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
   color: var(--color-plywood-400); }
@@ -41,7 +48,6 @@
   letter-spacing: -0.02em; color: var(--color-chalk-50); margin: 12px 0 0; }
 .pf-handle-row { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono);
   font-size: 13px; color: var(--color-chalk-200); flex-wrap: wrap; }
-.pf-handle-row .at { color: var(--color-plywood-400); }
 .pf-handle-row .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--color-slate-400); }
 .pf-handle-row .ic { display: inline-flex; align-items: center; gap: 6px; }
 .pf-handle-row svg { width: 14px; height: 14px; stroke: var(--color-plywood-400); fill: none;
@@ -291,9 +297,27 @@
 }
 @media (max-width: 640px) {
   .pf-wrap { padding: 0 20px 64px; }
-  .pf-chero { flex-wrap: wrap; }
-  .pf-name { font-size: 36px; }
-  .pf-logband { grid-template-columns: repeat(2, 1fr); }
+  /* hero: eyebrow on top, avatar beside name, handle + button full-width below */
+  .pf-chero { grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "eyebrow eyebrow"
+      "avatar  name"
+      "handle  handle"
+      "actions actions";
+    column-gap: 16px; row-gap: 12px; }
+  /* avatar 84 -> 64 (override inline --sz-based size + monogram font) */
+  .pf-chero > .pf-mono,
+  .pf-chero > .pf-photo { width: 64px; height: 64px; }
+  .pf-chero > .pf-mono { font-size: 26px; }
+  .pf-name { font-size: 36px; margin-top: 0; }
+  .pf-chero > .pf-handle-row { margin-top: 0; }
+  /* full-width Edit button */
+  .pf-chero-actions .pf-btn { width: 100%; justify-content: center; }
+  /* stats: 3 across on row 1 (span 2 of 6), max grades fill row 2 (span 3 of 6) */
+  .pf-logband { grid-template-columns: repeat(6, 1fr); }
+  .pf-logstat { grid-column: span 2; padding: 14px 12px; }
+  .pf-loggrade { grid-column: span 3; padding: 14px 12px; }
+  .pf-logstat .n, .pf-loggrade .n { font-size: 26px; }
   .pf-grid-3 { grid-template-columns: 1fr; }
   .pf-loghead, .pf-logrow { grid-template-columns: 16px 1fr auto 60px; }
   .pf-loghead span:nth-child(4), .pf-logrow .gym { display: none; }

@@ -166,26 +166,18 @@ export default async function ProfilePage() {
           {/* compact hero */}
           <div className="pf-chero">
             <ProfileAvatar src={profile.avatar_url} username={profile.username} size={84} />
-            <div className="pf-chero-id">
-              <span className="pf-eyebrow">Your profile</span>
-              <h1 className="pf-name">{name}</h1>
-              <div className="pf-handle-row">
-                {profile.username && <span className="at">@{profile.username}</span>}
-                {topGym && (
-                  <>
-                    {profile.username && <span className="dot" />}
-                    <span className="ic"><MountainIcon />{topGym}</span>
-                  </>
-                )}
-                {ftin && (
-                  <>
-                    <span className="dot" />
-                    <span className="ic"><RulerIcon />{ftin}</span>
-                  </>
-                )}
-                <span className="dot" />
-                <span>Climbing since {since}</span>
-              </div>
+            <span className="pf-eyebrow">Your profile</span>
+            <h1 className="pf-name">{name}</h1>
+            <div className="pf-handle-row">
+              {topGym && <span className="ic"><MountainIcon />{topGym}</span>}
+              {ftin && (
+                <>
+                  {topGym && <span className="dot" />}
+                  <span className="ic"><RulerIcon />{ftin}</span>
+                </>
+              )}
+              {(topGym || ftin) && <span className="dot" />}
+              <span>Climbing since {since}</span>
             </div>
             <div className="pf-chero-actions">
               <ProfileEdit
