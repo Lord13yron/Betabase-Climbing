@@ -196,10 +196,17 @@ export default async function ProfilePage() {
 
           {/* log stat band */}
           <div className="pf-logband">
-            <div className="pf-logstat"><span className="l">Sends</span><span className="n">{totalSends}</span></div>
-            <div className="pf-logstat"><span className="l">Beta filmed</span><span className="n">{videos.length}</span></div>
+            <div className="pf-logstat">
+              <div className="pf-logstat-top"><span className="l">Sends</span><FlagIcon /></div>
+              <span className="n">{totalSends}</span>
+            </div>
+            <div className="pf-logstat">
+              <div className="pf-logstat-top"><span className="l">Beta filmed</span><VideoIcon /></div>
+              <span className="n">{videos.length}</span>
+            </div>
             <div className="pf-logstat" style={{ borderRight: '1px solid var(--hairline)' }}>
-              <span className="l">Favorites</span><span className="n">{totalFavs}</span>
+              <div className="pf-logstat-top"><span className="l">Favorites</span><HeartIcon /></div>
+              <span className="n">{totalFavs}</span>
             </div>
             <div className="pf-loggrade" style={{ background: profile.max_boulder_grade ? BOULDER_BLOCK : 'var(--color-slate-600)' }}>
               <span className="l" style={{ color: profile.max_boulder_grade ? '#f6f2ea' : 'var(--color-slate-300)' }}>Max boulder</span>
