@@ -1,0 +1,75 @@
+/* Contact page — dark concrete-slate system. Token values mirror profile.css. */
+
+.c-page { background: var(--color-slate-900); color: var(--fg); font-family: var(--font-ui); }
+.c-main { background: var(--color-slate-800); min-height: 100vh; }
+.c-wrap { max-width: 1120px; margin: 0 auto; padding: 0 40px 84px; }
+.c-page *, .c-page *::before, .c-page *::after { box-sizing: border-box; }
+
+/* ---- hero ---- */
+.c-hero { padding: 44px 0 0; max-width: 680px; }
+.c-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-family: var(--font-mono);
+  font-weight: 500; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--color-plywood-400); }
+.c-eyebrow::before { content: ""; width: 30px; height: 1px; background: currentColor; opacity: 0.7; }
+.c-title { font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 0.98;
+  letter-spacing: -0.02em; color: var(--color-chalk-50); margin: 12px 0 0; }
+.c-sub { font-family: var(--font-ui); font-size: 16px; line-height: 1.55; color: var(--color-chalk-200);
+  margin: 14px 0 0; }
+
+/* ---- body grid ---- */
+.c-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; margin-top: 40px;
+  align-items: start; }
+.c-card, .c-aside { background: var(--color-slate-700); border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg); box-shadow: 0 6px 18px rgba(20, 14, 10, 0.34); }
+.c-card { padding: 28px; }
+.c-aside { padding: 24px; }
+.c-aside-label { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--color-slate-300); }
+.c-aside-note { font-family: var(--font-ui); font-size: 15px; line-height: 1.55; color: var(--color-chalk-200);
+  margin: 10px 0 0; }
+
+/* ---- form ---- */
+.c-form { display: flex; flex-direction: column; gap: 18px; }
+.c-field { display: flex; flex-direction: column; gap: 8px; }
+.c-field > label { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--color-slate-300); }
+.c-input, .c-select, .c-textarea { width: 100%; background: var(--color-slate-900); border: 1px solid var(--hairline);
+  border-radius: var(--radius-md); padding: 13px 15px; font-family: var(--font-ui); font-size: 15px;
+  color: var(--color-chalk-100); outline: none; transition: border-color var(--dur-fast); appearance: none; }
+.c-input::placeholder, .c-textarea::placeholder { color: var(--color-slate-400); }
+.c-input:focus, .c-select:focus, .c-textarea:focus { border-color: var(--accent); }
+.c-textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+.c-select-wrap { position: relative; }
+.c-select-wrap::after { content: ""; position: absolute; right: 16px; top: 50%; width: 9px; height: 9px;
+  margin-top: -5px; pointer-events: none; border-right: 1.6px solid var(--color-slate-400);
+  border-bottom: 1.6px solid var(--color-slate-400); transform: rotate(45deg); }
+
+.c-error { font-family: var(--font-ui); font-size: 13px; color: var(--color-hold-red, #d6453b); margin: 0; }
+
+.c-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 46px; padding: 0 20px;
+  border-radius: var(--radius-md); cursor: pointer; white-space: nowrap; border: none;
+  font-family: var(--font-ui); font-weight: 600; font-size: 14.5px; text-decoration: none;
+  background-color: var(--accent); background-image: var(--wood-fine); background-size: 220px 140px;
+  background-blend-mode: multiply; color: var(--on-accent);
+  transition: background-color var(--dur-fast), transform var(--dur-fast); }
+.c-btn:hover { background-color: var(--color-plywood-600); }
+.c-btn:active { transform: scale(0.97); }
+.c-btn:disabled { opacity: 0.55; cursor: default; }
+
+/* ---- success panel ---- */
+.c-success h2 { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.1;
+  color: var(--color-chalk-50); margin: 0; }
+.c-success p { font-family: var(--font-ui); font-size: 15px; line-height: 1.55; color: var(--color-chalk-200);
+  margin: 12px 0 0; }
+
+/* ---- honeypot (visually hidden) ---- */
+.c-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---- responsive ---- */
+@media (max-width: 720px) {
+  .c-wrap { padding: 0 20px 64px; }
+  .c-grid { grid-template-columns: 1fr; gap: 20px; margin-top: 32px; }
+  .c-title { font-size: 36px; }
+  .c-card { padding: 22px; }
+  .c-btn { width: 100%; }
+}

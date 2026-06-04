@@ -26,7 +26,7 @@ const COLS: { h: string; links: [string, string][] }[] = [
     links: [
       ["About", "#"],
       ["Careers", "#"],
-      ["Contact", "#"],
+      ["Contact", "/contact"],
       ["Privacy", "#"],
     ],
   },
