@@ -1,8 +1,10 @@
+import './manage.css'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { canManageGym } from '@/lib/auth/can-manage-gym'
 import { ManageClient } from './ManageClient'
+import { ArrowLeftIcon, LayersIcon, EyeIcon } from './icons'
 
 export default async function ManageGymPage({
   params,
@@ -15,7 +17,7 @@ export default async function ManageGymPage({
 
   const supabase = await createClient()
   const [gymResult, wallsResult, routesResult] = await Promise.all([
-    supabase.from('gyms').select('id, name').eq('id', gymId).single(),
+    supabase.from('gyms').select('id, name, city').eq('id', gymId).single(),
     supabase
       .from('walls')
       .select('id, name, sort_order')
@@ -30,19 +32,51 @@ export default async function ManageGymPage({
   const gym = gymResult.data
   if (gymResult.error || !gym) notFound()
 
-  return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8">
-      <Link href={`/gyms/${gymId}`} className="text-sm underline">
-        ← Back to {gym.name}
-      </Link>
-      <h1 className="mt-2 text-2xl font-semibold">Manage {gym.name}</h1>
+  const walls = wallsResult.data ?? []
+  const routes = routesResult.data ?? []
 
-      <div className="mt-6">
-        <ManageClient
-          gymId={gymId}
-          walls={wallsResult.data ?? []}
-          routes={routesResult.data ?? []}
-        />
+  return (
+    <main className="m-page">
+      <div className="m-wrap">
+        <Link href={`/gyms/${gymId}`} className="m-crumb">
+          <ArrowLeftIcon />
+          Back to {gym.name}
+        </Link>
+
+        <div className="m-head">
+          <div className="m-head-l">
+            <span className="m-eyebrow">Manage gym</span>
+            <h1 className="m-title">{gym.name}</h1>
+            <div className="m-sub">
+              <span className="seg">
+                <LayersIcon />
+                {routes.length} {routes.length === 1 ? 'route' : 'routes'}
+              </span>
+              <span className="dot" />
+              <span className="seg">
+                {walls.length} {walls.length === 1 ? 'wall' : 'walls'}
+              </span>
+              {gym.city && (
+                <>
+                  <span className="dot" />
+                  <span className="seg">{gym.city}</span>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="m-head-r">
+            <Link href={`/gyms/${gymId}`} className="m-view-link">
+              <EyeIcon />
+              View public page
+            </Link>
+          </div>
+        </div>
+
+        <div className="m-head-rule" />
+
+        <div className="m-board">
+          <ManageClient gymId={gymId} walls={walls} routes={routes} />
+        </div>
       </div>
     </main>
   )

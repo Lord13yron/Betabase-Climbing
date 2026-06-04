@@ -9,13 +9,22 @@ import {
   useTransition,
 } from 'react'
 import { type Discipline } from '@/lib/grades'
+import { holdColor, holdInk } from '@/lib/holds'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { RouteForm } from './RouteForm'
+import {
+  ChevronDownIcon,
+  PencilIcon,
+  TrashIcon,
+  PlusIcon,
+  CheckIcon,
+  XIcon,
+  LayersIcon,
+} from './icons'
 import {
   createWallAction,
   deleteRouteAction,
   deleteWallAction,
-  moveWallAction,
   renameWallAction,
   type FormState,
 } from './actions'
@@ -45,7 +54,13 @@ const DISCIPLINE_ORDER: Record<Discipline, number> = {
   lead: 2,
 }
 
-const BTN = 'rounded border border-foreground/20 px-2 py-1 text-sm hover:bg-foreground/5 disabled:opacity-40'
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function fmtSetDate(iso: string | null): string | null {
+  if (!iso) return null
+  const [, m, d] = iso.split('-')
+  if (!m || !d) return iso
+  return `${MONTHS[Number(m) - 1]} ${Number(d)}`
+}
 
 type RouteDialog =
   | { mode: 'closed' }
@@ -55,6 +70,7 @@ type RouteDialog =
 type Confirm = {
   title: string
   message: string
+  success: string
   run: () => Promise<FormState>
 }
 
@@ -68,14 +84,31 @@ export function ManageClient({
   routes: Route[]
 }) {
   const [pending, startTransition] = useTransition()
-  const [error, setError] = useState<string | null>(null)
   const [routeDialog, setRouteDialog] = useState<RouteDialog>({ mode: 'closed' })
   const [confirm, setConfirm] = useState<Confirm | null>(null)
+  const [addWallOpen, setAddWallOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
+  // --- toast -------------------------------------------------------------
+  const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false })
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showToast = useCallback((msg: string) => {
+    setToast({ msg, show: true })
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast((t) => ({ ...t, show: false })), 2200)
+  }, [])
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current) }, [])
+
+  const onWallAdded = useCallback(() => showToast('Wall added'), [showToast])
+  const onWallRenamed = useCallback(() => showToast('Wall renamed'), [showToast])
+
+  // --- route modal -------------------------------------------------------
   const closeRouteDialog = useCallback(() => setRouteDialog({ mode: 'closed' }), [])
-
   const routeDialogRef = useRef<HTMLDialogElement>(null)
   const routeOpen = routeDialog.mode !== 'closed'
+  const routeModeRef = useRef(routeDialog.mode)
+  routeModeRef.current = routeDialog.mode
+
   useEffect(() => {
     const dialog = routeDialogRef.current
     if (!dialog) return
@@ -83,25 +116,30 @@ export function ManageClient({
     if (!routeOpen && dialog.open) dialog.close()
   }, [routeOpen])
 
-  function run(fn: () => Promise<FormState>) {
-    setError(null)
-    startTransition(async () => {
-      const res = await fn()
-      if (res?.error) setError(res.error)
-    })
+  const onRouteSuccess = useCallback(() => {
+    showToast(routeModeRef.current === 'edit' ? 'Route saved' : 'Route added')
+    closeRouteDialog()
+  }, [showToast, closeRouteDialog])
+
+  // Close the route modal when the backdrop (the <dialog> itself) is clicked.
+  function onRouteBackdrop(e: React.MouseEvent<HTMLDialogElement>) {
+    if (e.target === routeDialogRef.current) closeRouteDialog()
   }
 
   function handleConfirm() {
     if (!confirm) return
-    setError(null)
+    const { run, success } = confirm
     startTransition(async () => {
-      const res = await confirm.run()
-      if (res?.error) setError(res.error)
+      const res = await run()
+      showToast(res?.error ?? success)
       setConfirm(null)
     })
   }
 
-  const wallName = new Map(walls.map((w) => [w.id, w.name]))
+  function toggle(id: string) {
+    setCollapsed((c) => ({ ...c, [id]: !c[id] }))
+  }
+
   function routesForWall(wallId: string | null) {
     return routes
       .filter((r) => r.wall_id === wallId)
@@ -111,129 +149,139 @@ export function ManageClient({
       })
   }
 
-  const groups = [
-    ...walls.map((w) => ({ id: w.id, name: w.name, routes: routesForWall(w.id) })),
-    { id: null, name: 'Unassigned', routes: routesForWall(null) },
-  ].filter((g) => g.routes.length > 0)
+  const unassigned = routesForWall(null)
+  const isEmpty = walls.length === 0 && routes.length === 0
 
   return (
-    <div className="flex flex-col gap-10">
-      {error && (
-        <p className="rounded border border-red-600/40 bg-red-600/10 px-3 py-2 text-sm text-red-600">
-          {error}
-        </p>
+    <section className="m-routes">
+      <div className="m-sec-head">
+        <span className="m-sec-title">Walls &amp; routes</span>
+        <span className="m-sec-count">{routes.length}</span>
+        <span className="m-sec-spacer" />
+        <button
+          type="button"
+          className="m-btn m-btn--ghost"
+          onClick={() => setAddWallOpen((o) => !o)}
+        >
+          <PlusIcon />
+          Add wall
+        </button>
+        <button
+          type="button"
+          className="m-btn m-btn--primary"
+          onClick={() => setRouteDialog({ mode: 'create' })}
+        >
+          <PlusIcon />
+          Add route
+        </button>
+      </div>
+
+      {addWallOpen && (
+        <AddWallForm
+          gymId={gymId}
+          onAdded={onWallAdded}
+          onCancel={() => setAddWallOpen(false)}
+        />
       )}
 
-      <section>
-        <h2 className="text-lg font-semibold">Walls</h2>
-        <ul className="mt-3 flex flex-col gap-2">
-          {walls.map((wall, i) => (
-            <WallRow
+      {isEmpty ? (
+        <div className="m-routes-empty">
+          <div className="m-routes-empty-ic">
+            <LayersIcon />
+          </div>
+          <h3>No walls or routes yet</h3>
+          <p>
+            Start by adding a wall, then set its routes — each one gets a grade, a set
+            color, and a wall, so climbers can browse and film beta against them.
+          </p>
+          <button
+            type="button"
+            className="m-btn m-btn--primary"
+            onClick={() => setRouteDialog({ mode: 'create' })}
+          >
+            <PlusIcon />
+            Add the first route
+          </button>
+        </div>
+      ) : (
+        <div className="m-grouplist">
+          {walls.map((wall) => (
+            <WallSection
               key={wall.id}
               gymId={gymId}
               wall={wall}
-              isFirst={i === 0}
-              isLast={i === walls.length - 1}
-              disabled={pending}
-              onMove={(dir) => run(() => moveWallAction(gymId, wall.id, dir))}
+              routes={routesForWall(wall.id)}
+              collapsed={!!collapsed[wall.id]}
+              onToggle={() => toggle(wall.id)}
+              onRenamed={onWallRenamed}
+              onEditRoute={(route) => setRouteDialog({ mode: 'edit', route })}
+              onDeleteRoute={(route) =>
+                setConfirm({
+                  title: `Delete route “${route.name}”?`,
+                  message: 'This can’t be undone.',
+                  success: 'Route deleted',
+                  run: () => deleteRouteAction(gymId, route.id),
+                })
+              }
               onDelete={() => {
-                const count = routes.filter((r) => r.wall_id === wall.id).length
+                const count = routesForWall(wall.id).length
                 setConfirm({
                   title: `Delete wall “${wall.name}”?`,
                   message:
                     count > 0
                       ? `This also permanently deletes its ${count} route${count === 1 ? '' : 's'}.`
                       : 'This can’t be undone.',
+                  success: 'Wall deleted',
                   run: () => deleteWallAction(gymId, wall.id),
                 })
               }}
             />
           ))}
-          {walls.length === 0 && (
-            <li className="text-sm text-foreground/70">No walls yet.</li>
-          )}
-        </ul>
-        <AddWallForm gymId={gymId} />
-      </section>
 
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Routes</h2>
-          <button
-            type="button"
-            onClick={() => setRouteDialog({ mode: 'create' })}
-            className="rounded bg-foreground px-3 py-2 text-sm font-medium text-background"
-          >
-            + Add route
-          </button>
-        </div>
-
-        {groups.length === 0 ? (
-          <p className="mt-4 text-sm text-foreground/70">No routes yet.</p>
-        ) : (
-          <div className="mt-4 flex flex-col gap-6">
-            {groups.map((group) => (
-              <div key={group.id ?? 'unassigned'}>
-                <h3 className="text-sm font-medium text-foreground/70">
-                  {group.name}
-                </h3>
-                <ul className="mt-2 flex flex-col gap-2">
-                  {group.routes.map((r) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center justify-between gap-3 rounded border border-foreground/20 px-3 py-2"
-                    >
-                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                        <span className="font-medium">{r.grade_label}</span>
-                        <span>{r.name}</span>
-                        <span className="text-foreground/70">
-                          {DISCIPLINE_LABEL[r.discipline]}
-                        </span>
-                        {r.color && (
-                          <span className="flex items-center gap-1.5 text-foreground/70">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full border border-foreground/20"
-                              style={{ backgroundColor: r.color }}
-                            />
-                            {r.color}
-                          </span>
-                        )}
-                      </span>
-                      <span className="flex shrink-0 gap-2">
-                        <button
-                          type="button"
-                          className={BTN}
-                          onClick={() => setRouteDialog({ mode: 'edit', route: r })}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className={BTN}
-                          onClick={() =>
-                            setConfirm({
-                              title: `Delete route “${r.name}”?`,
-                              message: 'This can’t be undone.',
-                              run: () => deleteRouteAction(gymId, r.id),
-                            })
-                          }
-                        >
-                          Delete
-                        </button>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+          {unassigned.length > 0 && (
+            <div className="m-group" data-collapsed={collapsed['un'] ? 'true' : 'false'}>
+              <div className="m-group-head" onClick={() => toggle('un')}>
+                <span className="m-chev">
+                  <ChevronDownIcon />
+                </span>
+                <div className="m-group-id">
+                  <span className="m-group-name is-unassigned" title="Unassigned">
+                    Unassigned
+                  </span>
+                  <span className="m-group-count">
+                    {unassigned.length} {unassigned.length === 1 ? 'route' : 'routes'}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+              <div className="m-group-body">
+                <div className="m-rowlist">
+                  {unassigned.map((r) => (
+                    <RouteRow
+                      key={r.id}
+                      route={r}
+                      onEdit={() => setRouteDialog({ mode: 'edit', route: r })}
+                      onDelete={() =>
+                        setConfirm({
+                          title: `Delete route “${r.name}”?`,
+                          message: 'This can’t be undone.',
+                          success: 'Route deleted',
+                          run: () => deleteRouteAction(gymId, r.id),
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <dialog
         ref={routeDialogRef}
         onClose={closeRouteDialog}
-        className="m-auto w-full max-w-md rounded-lg border border-foreground/15 bg-background p-5 text-foreground backdrop:bg-black/50"
+        onClick={onRouteBackdrop}
+        className="m-modal"
       >
         {routeDialog.mode !== 'closed' && (
           <RouteForm
@@ -241,7 +289,7 @@ export function ManageClient({
             gymId={gymId}
             walls={walls}
             route={routeDialog.mode === 'edit' ? routeDialog.route : undefined}
-            onSuccess={closeRouteDialog}
+            onSuccess={onRouteSuccess}
             onCancel={closeRouteDialog}
           />
         )}
@@ -255,128 +303,238 @@ export function ManageClient({
         onConfirm={handleConfirm}
         onCancel={() => setConfirm(null)}
       />
-    </div>
+
+      <div className={`m-toast${toast.show ? ' show' : ''}`} role="status" aria-live="polite">
+        <CheckIcon />
+        <span>{toast.msg}</span>
+      </div>
+    </section>
   )
 }
 
-function AddWallForm({ gymId }: { gymId: string }) {
+function AddWallForm({
+  gymId,
+  onAdded,
+  onCancel,
+}: {
+  gymId: string
+  onAdded: () => void
+  onCancel: () => void
+}) {
   const action = createWallAction.bind(null, gymId)
-  const [state, formAction, pending] = useActionState<FormState, FormData>(
-    action,
-    {}
-  )
+  const [state, formAction, pending] = useActionState<FormState, FormData>(action, {})
   const formRef = useRef<HTMLFormElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
+  // Re-run on every successful submit (new state object) so the composer can be
+  // used for rapid entry: reset, refocus, toast — and stay open.
   useEffect(() => {
-    if (state.ok) formRef.current?.reset()
-  }, [state.ok])
+    if (state.ok) {
+      formRef.current?.reset()
+      inputRef.current?.focus()
+      onAdded()
+    }
+  }, [state, onAdded])
 
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="mt-3 flex items-start gap-2"
-    >
+    <form ref={formRef} action={formAction} className="m-addwall" autoComplete="off">
       <input
+        ref={inputRef}
         name="name"
         required
-        placeholder="New wall name"
-        className="rounded border border-foreground/20 bg-transparent px-3 py-2 text-sm"
+        autoFocus
+        placeholder="New wall name…"
+        aria-label="New wall name"
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded border border-foreground/20 px-3 py-2 text-sm hover:bg-foreground/5 disabled:opacity-50"
-      >
-        {pending ? 'Adding…' : 'Add wall'}
+      <button type="submit" disabled={pending} className="m-btn m-btn--primary">
+        Add
       </button>
-      {state.error && <p className="self-center text-sm text-red-600">{state.error}</p>}
+      <button type="button" onClick={onCancel} className="m-btn m-btn--ghost">
+        Cancel
+      </button>
     </form>
   )
 }
 
-function WallRow({
+function WallSection({
   gymId,
   wall,
-  isFirst,
-  isLast,
-  disabled,
-  onMove,
+  routes,
+  collapsed,
+  onToggle,
+  onRenamed,
+  onEditRoute,
+  onDeleteRoute,
   onDelete,
 }: {
   gymId: string
-  wall: { id: string; name: string }
-  isFirst: boolean
-  isLast: boolean
-  disabled: boolean
-  onMove: (dir: 'up' | 'down') => void
+  wall: Wall
+  routes: Route[]
+  collapsed: boolean
+  onToggle: () => void
+  onRenamed: () => void
+  onEditRoute: (route: Route) => void
+  onDeleteRoute: (route: Route) => void
   onDelete: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const action = renameWallAction.bind(null, gymId, wall.id)
-  const [state, formAction, pending] = useActionState<FormState, FormData>(
-    action,
-    {}
-  )
+  const [state, formAction, pending] = useActionState<FormState, FormData>(action, {})
 
   useEffect(() => {
-    if (state.ok) setEditing(false)
-  }, [state.ok])
+    if (state.ok) {
+      setEditing(false)
+      onRenamed()
+    }
+  }, [state, onRenamed])
 
   return (
-    <li className="flex items-center justify-between gap-3 rounded border border-foreground/20 px-3 py-2">
-      {editing ? (
-        <form action={formAction} className="flex flex-1 items-center gap-2">
-          <input
-            name="name"
-            required
-            defaultValue={wall.name}
-            autoFocus
-            className="flex-1 rounded border border-foreground/20 bg-transparent px-2 py-1 text-sm"
-          />
-          <button type="submit" disabled={pending} className={BTN}>
-            {pending ? 'Saving…' : 'Save'}
-          </button>
-          <button type="button" onClick={() => setEditing(false)} className={BTN}>
-            Cancel
-          </button>
-        </form>
-      ) : (
-        <>
-          <span className="text-sm font-medium">{wall.name}</span>
-          <span className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              aria-label="Move up"
-              className={BTN}
-              disabled={disabled || isFirst}
-              onClick={() => onMove('up')}
-            >
-              ↑
+    <div className="m-group" data-collapsed={collapsed ? 'true' : 'false'}>
+      <div className="m-group-head" onClick={onToggle}>
+        <span className="m-chev">
+          <ChevronDownIcon />
+        </span>
+
+        {editing ? (
+          <form
+            action={formAction}
+            className="m-group-rename"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              name="name"
+              required
+              autoFocus
+              defaultValue={wall.name}
+              className="m-group-input"
+            />
+            <button type="submit" disabled={pending} className="m-iconbtn" aria-label="Save">
+              <CheckIcon />
             </button>
             <button
               type="button"
-              aria-label="Move down"
-              className={BTN}
-              disabled={disabled || isLast}
-              onClick={() => onMove('down')}
+              className="m-iconbtn"
+              aria-label="Cancel"
+              onClick={(e) => {
+                e.stopPropagation()
+                setEditing(false)
+              }}
             >
-              ↓
+              <XIcon />
             </button>
-            <button type="button" className={BTN} onClick={() => setEditing(true)}>
-              Rename
-            </button>
-            <button
-              type="button"
-              className={BTN}
-              disabled={disabled}
-              onClick={onDelete}
-            >
-              Delete
-            </button>
-          </span>
-        </>
-      )}
-    </li>
+          </form>
+        ) : (
+          <>
+            <div className="m-group-id">
+              <span className="m-group-name" title={wall.name}>
+                {wall.name}
+              </span>
+              <span className="m-group-count">
+                {routes.length} {routes.length === 1 ? 'route' : 'routes'}
+              </span>
+            </div>
+            <div className="m-group-acts">
+              <button
+                type="button"
+                className="m-iconbtn"
+                aria-label="Rename wall"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditing(true)
+                }}
+              >
+                <PencilIcon />
+              </button>
+              <button
+                type="button"
+                className="m-iconbtn is-danger"
+                aria-label="Delete wall"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="m-group-body">
+        {routes.length === 0 ? (
+          <p className="m-group-hint">No routes on this wall yet.</p>
+        ) : (
+          <div className="m-rowlist">
+            {routes.map((r) => (
+              <RouteRow
+                key={r.id}
+                route={r}
+                onEdit={() => onEditRoute(r)}
+                onDelete={() => onDeleteRoute(r)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function RouteRow({
+  route,
+  onEdit,
+  onDelete,
+}: {
+  route: Route
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const bg = holdColor(route.color)
+  const setLabel = fmtSetDate(route.set_date)
+  return (
+    <div className="m-row">
+      <span className="m-grade" style={{ background: bg }}>
+        <span style={{ color: route.color ? holdInk(route.color) : 'var(--color-chalk-100)' }}>
+          {route.grade_label}
+        </span>
+      </span>
+
+      <div className="m-row-main">
+        <div className="m-row-name">{route.name}</div>
+        <div className="m-row-meta">
+          <span className="m-tag">{DISCIPLINE_LABEL[route.discipline]}</span>
+          {route.color && (
+            <>
+              <span className="dot" />
+              <span className="m-color">
+                <span className="m-swatch" style={{ background: bg }} />
+                {route.color}
+              </span>
+            </>
+          )}
+          {setLabel && (
+            <>
+              <span className="dot" />
+              <span>Set {setLabel}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="m-row-acts">
+        <button type="button" className="m-iconbtn" aria-label="Edit route" onClick={onEdit}>
+          <PencilIcon />
+        </button>
+        <button
+          type="button"
+          className="m-iconbtn is-danger"
+          aria-label="Delete route"
+          onClick={onDelete}
+        >
+          <TrashIcon />
+        </button>
+      </div>
+    </div>
   )
 }
