@@ -44,6 +44,7 @@ export async function deleteVideoAction(videoId: string): Promise<FormState> {
   if (error) return { error: error.message }
 
   revalidatePath(`/routes/${video.route_id}`)
+  revalidatePath('/profile')
   return { ok: true }
 }
 

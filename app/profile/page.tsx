@@ -5,48 +5,17 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { cmToFtIn } from '@/lib/height'
 import { ProfileEdit } from './ProfileEdit'
+import { MyVideosGrid, type MyVideoRow } from './MyVideosGrid'
+import { holdHex, holdInk, timeAgo } from './card-utils'
 import {
-  FlagIcon, VideoIcon, HeartIcon, EyeIcon, MessageIcon, PlayIcon,
+  FlagIcon, VideoIcon, HeartIcon,
   MountainIcon, RulerIcon, UploadIcon,
 } from './icons'
 
-// Named climbing-hold colors → hex (mirrors the brand palette). A route.color
-// that's already a hex is used directly; unknown/empty falls back to neutral.
-const HOLD: Record<string, string> = {
-  red: '#d6453b', orange: '#e5743a', yellow: '#edb23a', green: '#4e9d5b',
-  teal: '#2e93ae', blue: '#3e6fb3', purple: '#7e5ca8', pink: '#d85b9a',
-  black: '#2a2521', white: '#f2eee6',
-}
-const LIGHT_HOLDS = new Set(['yellow', 'white', 'orange'])
-function holdHex(color: string | null): string {
-  if (!color) return '#27303a'
-  if (color.startsWith('#')) return color
-  return HOLD[color.toLowerCase()] ?? '#27303a'
-}
-function holdInk(color: string | null): string {
-  return color && LIGHT_HOLDS.has(color.toLowerCase()) ? '#2a2521' : '#f6f2ea'
-}
 // Decorative grade-block colors (NOT a route's hold color — these are the two
 // "max grade" trophy chips, kept as fixed accents like the prototype).
 const BOULDER_BLOCK = '#7e5ca8' // purple
 const ROUTE_BLOCK = '#2e93ae'   // teal
-
-function timeAgo(iso: string): string {
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
-  const m = Math.floor(s / 60); if (m < 60) return `${m}m`
-  const h = Math.floor(m / 60); if (h < 24) return `${h}h`
-  const d = Math.floor(h / 24); if (d < 7) return `${d}d`
-  const w = Math.floor(d / 7); if (w < 5) return `${w}w`
-  const mo = Math.floor(d / 30); if (mo < 12) return `${mo}mo`
-  return `${Math.floor(d / 365)}y`
-}
-function fmtCount(n: number): string {
-  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n)
-}
-function muxThumb(playbackId: string | null): string | null {
-  return playbackId ? `https://image.mux.com/${playbackId}/thumbnail.webp?width=640&height=360&fit_mode=smartcrop` : null
-}
 
 type Profile = {
   username: string | null
@@ -55,15 +24,6 @@ type Profile = {
   max_boulder_grade: string | null
   max_route_grade: string | null
   created_at: string
-}
-type MyVideoRow = {
-  id: string
-  status: 'pending' | 'ready' | 'errored'
-  mux_playback_id: string | null
-  caption: string | null
-  view_count: number
-  created_at: string
-  routes: { id: string; name: string; grade_label: string; color: string | null } | null
 }
 type SendRow = {
   sent_at: string
@@ -239,48 +199,12 @@ export default async function ProfilePage() {
                 <Link className="pf-btn" href="/gyms"><UploadIcon />Find a route</Link>
               </div>
             ) : (
-              <div className="pf-grid-3">
-                {videos.map((v) => {
-                  const r = v.routes
-                  const thumb = muxThumb(v.mux_playback_id)
-                  const bg = holdHex(r?.color ?? null)
-                  return (
-                    <Link className="pf-card" href={r ? `/routes/${r.id}` : '#'} key={v.id}>
-                      <div className="pf-card-stage">
-                        {thumb ? (
-                          <div className="pf-card-img" style={{ backgroundImage: `url('${thumb}')` }} />
-                        ) : (
-                          <div className="pf-card-img" style={{ background: 'linear-gradient(135deg,#1d242c,#27303a)' }} />
-                        )}
-                        <div className="pf-card-scrim" />
-                        {v.status === 'ready' ? (
-                          <span className="pf-card-play"><PlayIcon /></span>
-                        ) : (
-                          <span className="pf-card-status"><VideoIcon />{v.status === 'pending' ? 'Processing' : 'Failed'}</span>
-                        )}
-                      </div>
-                      <div className="pf-card-body">
-                        <div className="pf-card-route">
-                          <span className="pf-dot" style={{ background: bg, width: 12, height: 12 }} />
-                          <span className="nm">{r?.name ?? 'Route'}</span>
-                          <span className="gr">{r?.grade_label}</span>
-                        </div>
-                        <div className="pf-card-cap">{v.caption || 'Your beta for this route.'}</div>
-                        <div className="pf-card-foot">
-                          <span className="pf-ava">
-                            {profile.avatar_url ? <img src={profile.avatar_url} alt="" /> : initial}
-                          </span>
-                          <span className="pf-card-who"><b>you</b> · {timeAgo(v.created_at)}</span>
-                          <span className="pf-card-stats">
-                            <span className="pf-card-stat"><EyeIcon />{fmtCount(v.view_count)}</span>
-                            <span className="pf-card-stat"><MessageIcon />{commentCountByVideo[v.id] ?? 0}</span>
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
+              <MyVideosGrid
+                videos={videos}
+                commentCountByVideo={commentCountByVideo}
+                avatarUrl={profile.avatar_url}
+                initial={initial}
+              />
             )}
           </section>
 
