@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { canManageGym } from '@/lib/auth/can-manage-gym'
+import { getMux } from '@/lib/mux'
 import { type Discipline, gradeOrder } from '@/lib/grades'
 
 export type FormState = { error?: string; ok?: boolean }
@@ -12,6 +13,18 @@ const DISCIPLINES: Discipline[] = ['boulder', 'top_rope', 'lead']
 function revalidateGym(gymId: string) {
   revalidatePath(`/gyms/${gymId}/manage`)
   revalidatePath(`/gyms/${gymId}`)
+}
+
+// Delete the hosted Mux assets backing a set of videos. Best-effort: an asset
+// may already be gone on Mux's side, and deleting the DB rows is what matters.
+// Routes/videos cascade-delete at the DB level, but Mux assets don't — so call
+// this before deleting any routes (single, by wall, or via wall delete).
+async function deleteMuxAssets(assetIds: (string | null)[]) {
+  await Promise.allSettled(
+    assetIds
+      .filter((id): id is string => !!id)
+      .map((id) => getMux().video.assets.delete(id))
+  )
 }
 
 // --- Walls ---------------------------------------------------------------
@@ -76,6 +89,17 @@ export async function deleteWallAction(
   if (!(await canManageGym(gymId))) return { error: 'Not authorized.' }
 
   const supabase = await createClient()
+
+  // Clean up the Mux assets for this wall's routes before the wall (and its
+  // routes/videos) cascade away in the DB.
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('mux_asset_id, routes!inner(wall_id, gym_id)')
+    .eq('routes.wall_id', wallId)
+    .eq('routes.gym_id', gymId)
+    .returns<{ mux_asset_id: string | null }[]>()
+  await deleteMuxAssets((videos ?? []).map((v) => v.mux_asset_id))
+
   const { error } = await supabase
     .from('walls')
     .delete()
@@ -184,10 +208,50 @@ export async function deleteRouteAction(
   if (!(await canManageGym(gymId))) return { error: 'Not authorized.' }
 
   const supabase = await createClient()
+
+  // Clean up the route's Mux assets before its videos cascade away in the DB.
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('mux_asset_id')
+    .eq('route_id', routeId)
+    .returns<{ mux_asset_id: string | null }[]>()
+  await deleteMuxAssets((videos ?? []).map((v) => v.mux_asset_id))
+
   const { error } = await supabase
     .from('routes')
     .delete()
     .eq('id', routeId)
+    .eq('gym_id', gymId)
+
+  if (error) return { error: error.message }
+
+  revalidateGym(gymId)
+  return { ok: true }
+}
+
+// Delete every route on a wall (keeping the wall). Video rows cascade in the DB,
+// but the hosted Mux assets don't — so we delete those first. The wall stays;
+// only its routes are wiped.
+export async function clearWallRoutesAction(
+  gymId: string,
+  wallId: string
+): Promise<FormState> {
+  if (!(await canManageGym(gymId))) return { error: 'Not authorized.' }
+
+  const supabase = await createClient()
+
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('mux_asset_id, routes!inner(wall_id, gym_id)')
+    .eq('routes.wall_id', wallId)
+    .eq('routes.gym_id', gymId)
+    .returns<{ mux_asset_id: string | null }[]>()
+  await deleteMuxAssets((videos ?? []).map((v) => v.mux_asset_id))
+
+  const { error } = await supabase
+    .from('routes')
+    .delete()
+    .eq('wall_id', wallId)
     .eq('gym_id', gymId)
 
   if (error) return { error: error.message }

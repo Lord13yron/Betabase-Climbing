@@ -20,9 +20,11 @@ import {
   CheckIcon,
   XIcon,
   LayersIcon,
+  EraserIcon,
 } from './icons'
 import {
   createWallAction,
+  clearWallRoutesAction,
   deleteRouteAction,
   deleteWallAction,
   renameWallAction,
@@ -215,6 +217,15 @@ export function ManageClient({
               onToggle={() => toggle(wall.id)}
               onRenamed={onWallRenamed}
               onEditRoute={(route) => setRouteDialog({ mode: 'edit', route })}
+              onClearRoutes={() => {
+                const count = routesForWall(wall.id).length
+                setConfirm({
+                  title: `Clear all routes on “${wall.name}”?`,
+                  message: `This permanently deletes ${count} route${count === 1 ? '' : 's'} and their videos. The wall stays.`,
+                  success: 'Routes cleared',
+                  run: () => clearWallRoutesAction(gymId, wall.id),
+                })
+              }}
               onDeleteRoute={(route) =>
                 setConfirm({
                   title: `Delete route “${route.name}”?`,
@@ -364,6 +375,7 @@ function WallSection({
   onToggle,
   onRenamed,
   onEditRoute,
+  onClearRoutes,
   onDeleteRoute,
   onDelete,
 }: {
@@ -374,6 +386,7 @@ function WallSection({
   onToggle: () => void
   onRenamed: () => void
   onEditRoute: (route: Route) => void
+  onClearRoutes: () => void
   onDeleteRoute: (route: Route) => void
   onDelete: () => void
 }) {
@@ -445,6 +458,19 @@ function WallSection({
               >
                 <PencilIcon />
               </button>
+              {routes.length > 0 && (
+                <button
+                  type="button"
+                  className="m-iconbtn"
+                  aria-label="Clear all routes"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClearRoutes()
+                  }}
+                >
+                  <EraserIcon />
+                </button>
+              )}
               <button
                 type="button"
                 className="m-iconbtn is-danger"
