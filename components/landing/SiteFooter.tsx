@@ -25,16 +25,17 @@ const COLS: { h: string; links: [string, string][] }[] = [
     h: "Company",
     links: [
       ["About", "#"],
-      ["Careers", "#"],
       ["Contact", "/contact"],
-      ["Privacy", "#"],
+      ["Privacy", "/privacy"],
+      ["Terms", "/terms"],
     ],
   },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="mx-auto grid max-w-328 grid-cols-1 gap-15 border-t border-(--hairline-soft) px-14 pt-20 pb-10 md:grid-cols-[1.4fr_2fr]">
+    <footer className="bg-(--color-slate-900) border-t border-(--hairline-soft)">
+      <div className="mx-auto grid max-w-328 grid-cols-1 gap-15 px-14 pt-20 pb-10 md:grid-cols-[1.4fr_2fr]">
       <div>
         <Link href="/" className="bb-logo">
           <Image className="bb-logo-mark" src="/landing/logo-mark.png" alt="" width={30} height={30} />
@@ -67,8 +68,9 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="col-span-full mt-5 flex justify-between border-t border-(--hairline-soft) pt-8.5">
-        <span className="bb-mono">© 2026 Betabase, Inc.</span>
+        <span className="bb-mono">© 2026 Betabase</span>
         <span className="bb-mono">Made for climbers, by climbers.</span>
+      </div>
       </div>
     </footer>
   );

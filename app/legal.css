@@ -1,0 +1,53 @@
+/* Shared legal pages (privacy + terms) — dark concrete-slate system.
+   Token values mirror contact.css / profile.css. Namespace: .lg-* */
+
+.lg-page { background: var(--color-slate-900); color: var(--fg); font-family: var(--font-ui); }
+.lg-main { background: var(--color-slate-800); min-height: 100vh; }
+.lg-wrap { max-width: 1120px; margin: 0 auto; padding: 0 40px 96px; }
+.lg-page *, .lg-page *::before, .lg-page *::after { box-sizing: border-box; }
+
+/* ---- hero ---- */
+.lg-hero { padding: 44px 0 0; max-width: 720px; }
+.lg-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-family: var(--font-mono);
+  font-weight: 500; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--color-plywood-400); }
+.lg-eyebrow::before { content: ""; width: 30px; height: 1px; background: currentColor; opacity: 0.7; }
+.lg-title { font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 0.98;
+  letter-spacing: -0.02em; color: var(--color-chalk-50); margin: 12px 0 0; }
+.lg-updated { display: block; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--color-slate-300); margin: 16px 0 0; }
+.lg-sub { font-family: var(--font-ui); font-size: 16px; line-height: 1.55; color: var(--color-chalk-200);
+  margin: 12px 0 0; }
+
+/* ---- prose body ---- */
+.lg-body { max-width: 760px; margin: 40px 0 0; }
+.lg-section { margin-top: 36px; }
+.lg-section:first-child { margin-top: 0; }
+.lg-h2 { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.15;
+  letter-spacing: -0.01em; color: var(--color-chalk-50); margin: 0 0 12px; }
+.lg-section p { font-family: var(--font-ui); font-size: 15.5px; line-height: 1.65; color: var(--color-chalk-200);
+  margin: 0 0 12px; }
+.lg-section p:last-child { margin-bottom: 0; }
+.lg-section ul { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.lg-section li { position: relative; padding-left: 20px; font-family: var(--font-ui); font-size: 15.5px;
+  line-height: 1.6; color: var(--color-chalk-200); }
+.lg-section li::before { content: ""; position: absolute; left: 2px; top: 10px; width: 6px; height: 6px;
+  border-radius: 2px; background: var(--color-plywood-500); }
+.lg-section li strong { color: var(--color-chalk-100); font-weight: 600; }
+.lg-section a { color: var(--color-plywood-400); text-decoration: underline; text-underline-offset: 2px; }
+.lg-section a:hover { color: var(--color-plywood-300, #d8b87f); }
+
+/* ---- prominent callout (safety / risk) ---- */
+.lg-callout { margin-top: 36px; padding: 22px 24px; border-radius: var(--radius-lg);
+  background: var(--color-slate-700); border: 1px solid var(--hairline);
+  border-left: 3px solid var(--color-plywood-500); box-shadow: 0 6px 18px rgba(20, 14, 10, 0.34); }
+.lg-callout .lg-h2 { font-size: 20px; }
+.lg-callout p { color: var(--color-chalk-100); }
+
+/* ---- responsive ---- */
+@media (max-width: 720px) {
+  .lg-wrap { padding: 0 20px 72px; }
+  .lg-title { font-size: 34px; }
+  .lg-body { margin-top: 32px; }
+  .lg-h2 { font-size: 20px; }
+}

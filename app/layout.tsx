@@ -3,6 +3,7 @@ import { Playfair_Display, IBM_Plex_Mono, Hanken_Grotesk } from "next/font/googl
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { BrandNav } from "@/components/BrandNav";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 
 // Brand type system (replaces Geist). Exposed as CSS variables that globals.css
 // maps onto --font-display / --font-mono / --font-ui (and --font-sans).
@@ -67,6 +68,7 @@ export default async function RootLayout({
       <body className="min-h-full">
         <BrandNav username={username} avatarUrl={avatarUrl} isAuthed={!!user} />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
