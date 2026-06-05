@@ -33,7 +33,12 @@ export async function updateSession(request: NextRequest) {
   // finish onboarding before using the rest of the app. Anonymous users browse
   // freely. The /auth/* route handlers are excluded via the proxy matcher so
   // the OAuth/email callbacks can establish the session first.
-  if (user && request.nextUrl.pathname !== '/onboarding') {
+  // /reset-password is allowed through too: a recovery session is authenticated,
+  // and the user must reach the set-password screen before anything else.
+  const gateExempt =
+    request.nextUrl.pathname === '/onboarding' ||
+    request.nextUrl.pathname === '/reset-password'
+  if (user && !gateExempt) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('username')

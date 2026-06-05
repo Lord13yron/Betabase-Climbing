@@ -4,6 +4,9 @@ import { useActionState } from 'react'
 import Link from 'next/link'
 import { signInAction, type AuthState } from '../actions'
 import { GoogleButton } from '@/components/GoogleButton'
+import { AuthHead } from '@/components/auth/AuthHead'
+import { EmailField, PasswordField, AuthError } from '@/components/auth/AuthFields'
+import { AuthSubmit, OrDivider } from '@/components/auth/AuthSubmit'
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -12,42 +15,33 @@ export default function LoginPage() {
   )
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-col gap-6 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Log in</h1>
+    <section className="a-anim-in" aria-labelledby="login-title">
+      <AuthHead
+        eyebrow="Welcome back"
+        before="Pick up where you"
+        accent="left off"
+        titleId="login-title"
+        sub="Log in to find your gym, watch beta, and keep logging your sends."
+      />
 
-      <form action={formAction} className="flex flex-col gap-3">
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="Email"
-          className="rounded border border-foreground/20 px-3 py-2"
+      <form action={formAction} className="a-form" noValidate>
+        {state.error ? <AuthError>{state.error}</AuthError> : null}
+        <EmailField id="login-email" />
+        <PasswordField id="login-password" mode="current" />
+        <AuthSubmit
+          id="login-submit"
+          pending={pending}
+          label="Log in"
+          pendingLabel="Logging in…"
         />
-        <input
-          name="password"
-          type="password"
-          required
-          placeholder="Password"
-          className="rounded border border-foreground/20 px-3 py-2"
-        />
-        {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-foreground px-4 py-2 font-medium text-background disabled:opacity-50"
-        >
-          {pending ? 'Logging in…' : 'Log in'}
-        </button>
       </form>
 
+      <OrDivider />
       <GoogleButton />
 
-      <p className="text-sm text-foreground/70">
-        No account?{' '}
-        <Link href="/signup" className="underline">
-          Sign up
-        </Link>
+      <p className="a-switch">
+        New to Betabase? <Link href="/signup">Create an account</Link>
       </p>
-    </main>
+    </section>
   )
 }

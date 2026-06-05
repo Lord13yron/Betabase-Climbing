@@ -34,6 +34,15 @@ function Logo() {
   );
 }
 
+// Full-viewport auth screens carry their own brand lockup, so the global nav
+// must not wrap them.
+const AUTH_ROUTES = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]);
+
 export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
   const pathname = usePathname();
   const isLanding = pathname === "/";
@@ -46,6 +55,8 @@ export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isLanding]);
+
+  if (AUTH_ROUTES.has(pathname)) return null;
 
   const className =
     "bb-nav" + (isLanding ? (scrolled ? " is-scrolled" : "") : " is-app");

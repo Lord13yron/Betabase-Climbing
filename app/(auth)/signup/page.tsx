@@ -4,6 +4,10 @@ import { useActionState } from 'react'
 import Link from 'next/link'
 import { signUpAction, type AuthState } from '../actions'
 import { GoogleButton } from '@/components/GoogleButton'
+import { AuthHead } from '@/components/auth/AuthHead'
+import { EmailField, PasswordField, AuthError } from '@/components/auth/AuthFields'
+import { AuthSubmit, OrDivider } from '@/components/auth/AuthSubmit'
+import { MailCheckIcon, ArrowLeftIcon } from '@/components/auth/Icon'
 
 export default function SignupPage() {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -11,56 +15,67 @@ export default function SignupPage() {
     {}
   )
 
+  // ---------- CHECK YOUR EMAIL ----------
+  // signUpAction returns { emailSent: true } when confirmation is required.
+  // `state.email` is the address the user typed (see actions.ts note below).
   if (state.emailSent) {
     return (
-      <main className="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-16">
-        <h1 className="text-2xl font-semibold">Check your email</h1>
-        <p className="text-foreground/70">
-          We sent you a confirmation link. Click it to finish creating your
-          account.
-        </p>
-      </main>
+      <section className="a-sent a-anim-in" aria-labelledby="sent-title">
+        <div className="a-sent-badge" aria-hidden="true">
+          <MailCheckIcon />
+        </div>
+        <header className="a-head" style={{ marginBottom: 18 }}>
+          <p className="a-eyebrow">Almost there</p>
+          <h1 className="a-title" id="sent-title">
+            Check your <em>email</em>.
+          </h1>
+          <p className="a-sub">
+            We sent a confirmation link to{' '}
+            <span className="a-mailto">{state.email ?? 'your inbox'}</span>. Click
+            it to finish creating your account.
+          </p>
+        </header>
+        <Link className="a-back" href="/login">
+          <ArrowLeftIcon />
+          Back to log in
+        </Link>
+      </section>
     )
   }
 
+  // ---------- SIGN UP ----------
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-col gap-6 px-4 py-16">
-      <h1 className="text-2xl font-semibold">Sign up</h1>
+    <section className="a-anim-in" aria-labelledby="signup-title">
+      <AuthHead
+        eyebrow="Join the community"
+        before="Start your"
+        accent="logbook"
+        titleId="signup-title"
+        sub="Create an account to track sends, favorite gyms, and give back your beta."
+      />
 
-      <form action={formAction} className="flex flex-col gap-3">
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="Email"
-          className="rounded border border-foreground/20 px-3 py-2"
+      <form action={formAction} className="a-form" noValidate>
+        {state.error ? <AuthError>{state.error}</AuthError> : null}
+        <EmailField id="signup-email" />
+        <PasswordField id="signup-password" mode="new" />
+        <AuthSubmit
+          id="signup-submit"
+          pending={pending}
+          label="Create account"
+          pendingLabel="Creating account…"
         />
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={6}
-          placeholder="Password"
-          className="rounded border border-foreground/20 px-3 py-2"
-        />
-        {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-foreground px-4 py-2 font-medium text-background disabled:opacity-50"
-        >
-          {pending ? 'Creating account…' : 'Sign up'}
-        </button>
       </form>
 
+      <OrDivider />
       <GoogleButton />
 
-      <p className="text-sm text-foreground/70">
-        Already have an account?{' '}
-        <Link href="/login" className="underline">
-          Log in
-        </Link>
+      <p className="a-legal">
+        By creating an account you agree to our <Link href="/terms">Terms</Link>{' '}
+        &amp; <Link href="/privacy">Privacy Policy</Link>.
       </p>
-    </main>
+      <p className="a-switch">
+        Already climbing with us? <Link href="/login">Log in</Link>
+      </p>
+    </section>
   )
 }

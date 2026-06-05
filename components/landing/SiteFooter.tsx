@@ -1,6 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Icon } from "./Icon";
+
+// Auth screens are full-viewport and carry their own chrome, so the global
+// footer must not render on them.
+const AUTH_ROUTES = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]);
 
 const COLS: { h: string; links: [string, string][] }[] = [
   {
@@ -33,6 +45,9 @@ const COLS: { h: string; links: [string, string][] }[] = [
 ];
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  if (AUTH_ROUTES.has(pathname)) return null;
+
   return (
     <footer className="bg-(--color-slate-900) border-t border-(--hairline-soft)">
       <div className="mx-auto grid max-w-328 grid-cols-1 gap-15 px-14 pt-20 pb-10 md:grid-cols-[1.4fr_2fr]">

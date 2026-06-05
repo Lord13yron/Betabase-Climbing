@@ -1,7 +1,13 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
+import { GoogleMark } from './auth/Icon'
 
+/**
+ * Restyled to the Betabase ghost-button spec (`.a-btn--ghost`) with the
+ * full-color Google mark. Behavior is unchanged from the original
+ * components/GoogleButton.tsx — OAuth redirect through /auth/callback.
+ */
 export function GoogleButton() {
   async function signInWithGoogle() {
     const supabase = createClient()
@@ -13,10 +19,11 @@ export function GoogleButton() {
 
   return (
     <button
+      className="a-btn a-btn--ghost"
       type="button"
       onClick={signInWithGoogle}
-      className="w-full rounded border border-foreground/20 px-4 py-2 font-medium hover:bg-foreground/5"
     >
+      <GoogleMark />
       Continue with Google
     </button>
   )
