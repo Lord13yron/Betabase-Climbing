@@ -12,6 +12,7 @@ const AUTH_ROUTES = new Set([
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/onboarding",
 ]);
 
 const COLS: { h: string; links: [string, string][] }[] = [

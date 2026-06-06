@@ -41,6 +41,7 @@ const AUTH_ROUTES = new Set([
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/onboarding",
 ]);
 
 export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
