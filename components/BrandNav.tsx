@@ -67,6 +67,7 @@ export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
       <Logo />
       <nav className="bb-nav-links">
         <Link href="/gyms">Gyms</Link>
+        {isAuthed && <Link href="/upload">Upload</Link>}
         {isLanding && (
           <>
             <a href="#how">How it works</a>
