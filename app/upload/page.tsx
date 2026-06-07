@@ -1,10 +1,15 @@
+import './upload.css'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { UploadPicker } from './UploadPicker'
+import { ArrowLeftIcon } from './icons'
 
 // Direct upload path: pick a gym → wall → route, then upload beta inline —
 // without first drilling into the route's page. Auth-gated; the existing
-// inline-on-route uploader stays as-is.
+// inline-on-route uploader stays as-is. Redesigned onto the brand "concrete
+// slate" surface (see app/upload/upload.css); the editorial header + success
+// state live inside <UploadPicker> so they can swap client-side.
 export default async function UploadPage() {
   const supabase = await createClient()
   const {
@@ -12,20 +17,25 @@ export default async function UploadPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: gyms } = await supabase
-    .from('gyms')
-    .select('id, name, city')
-    .order('name')
+  const [{ data: gyms }, { data: profile }] = await Promise.all([
+    supabase.from('gyms').select('id, name, city').order('name'),
+    supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single(),
+  ])
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold">Upload beta</h1>
-      <p className="mt-1 text-sm text-foreground/60">
-        Pick the gym, wall, and route, then add your clip.
-      </p>
-      <div className="mt-6">
-        <UploadPicker gyms={gyms ?? []} />
-      </div>
-    </main>
+    <div className="u-page">
+      <main className="u-main">
+        <div className="u-wrap">
+          <Link href="/gyms" className="u-crumb">
+            <ArrowLeftIcon className="u-ico" />
+            Back to gyms
+          </Link>
+          <UploadPicker
+            gyms={gyms ?? []}
+            poster={{ username: profile?.username ?? null, avatarUrl: profile?.avatar_url ?? null }}
+          />
+        </div>
+      </main>
+    </div>
   )
 }
