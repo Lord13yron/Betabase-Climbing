@@ -57,7 +57,8 @@ export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isLanding]);
 
-  if (AUTH_ROUTES.has(pathname)) return null;
+  // The /admin superuser console carries its own top strip + sidebar.
+  if (AUTH_ROUTES.has(pathname) || pathname.startsWith("/admin")) return null;
 
   const className =
     "bb-nav" + (isLanding ? (scrolled ? " is-scrolled" : "") : " is-app");

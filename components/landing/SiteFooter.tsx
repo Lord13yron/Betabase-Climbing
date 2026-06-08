@@ -47,7 +47,8 @@ const COLS: { h: string; links: [string, string][] }[] = [
 
 export function SiteFooter() {
   const pathname = usePathname();
-  if (AUTH_ROUTES.has(pathname)) return null;
+  // The /admin console is a self-contained app surface — no marketing footer.
+  if (AUTH_ROUTES.has(pathname) || pathname.startsWith("/admin")) return null;
 
   return (
     <footer className="bg-(--color-slate-900) border-t border-(--hairline-soft)">
