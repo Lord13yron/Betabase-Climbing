@@ -136,11 +136,24 @@
   font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.04em; color: var(--color-slate-300); }
 .rd-player-state.err { color: var(--color-hold-red); }
 
+/* corner overlays pinned on the video (reuse the .rd-badge translucent recipe) */
+.rd-overlay-views, .rd-overlay-del { position: absolute; top: 14px; z-index: 2;
+  background: rgba(7,9,12,0.7); backdrop-filter: blur(6px); color: var(--color-chalk-50); }
+.rd-overlay-views { left: 14px; pointer-events: none; display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 10px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.04em; }
+.rd-overlay-del { right: 14px; pointer-events: auto; cursor: pointer; border: none; display: flex;
+  align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;
+  transition: color var(--dur-fast); }
+.rd-overlay-del:hover { color: var(--color-hold-red); }
+.rd-overlay-views svg, .rd-overlay-del svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
 .rd-player-cap { padding: 18px 20px 20px; display: flex; align-items: flex-start; gap: 14px; }
 .rd-player-cap .rd-ava { margin: 0; border: none; background: var(--color-plywood-500); color: var(--on-accent);
   width: 40px; height: 40px; font-size: 13px; flex: none; }
 .rd-cap-body { flex: 1; min-width: 0; }
-.rd-cap-who { display: flex; align-items: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; color: var(--color-slate-300); }
+.rd-cap-who { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-family: var(--font-mono); font-size: 13px; color: var(--color-slate-300); }
 .rd-cap-who b { color: var(--color-chalk-100); font-weight: 600; }
 .rd-cap-who .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--color-slate-500); }
 .rd-cap-sub { display: inline-flex; align-items: center; gap: 9px; }
@@ -151,13 +164,8 @@
   color: var(--color-slate-300); white-space: nowrap; background: none; border: none; cursor: pointer;
   transition: color var(--dur-fast); }
 .rd-cap-stat:hover { color: var(--color-chalk-100); }
-.rd-cap-stat.is-static { cursor: default; }
-.rd-cap-stat.is-static:hover { color: var(--color-slate-300); }
 .rd-cap-stat[aria-expanded="true"] { color: var(--color-plywood-400); }
 .rd-cap-stat svg { width: 16px; height: 16px; stroke: var(--color-plywood-400); fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.rd-cap-del { background: none; border: none; cursor: pointer; font-family: var(--font-mono); font-size: 12px;
-  color: var(--color-slate-400); text-transform: uppercase; letter-spacing: 0.08em; transition: color var(--dur-fast); }
-.rd-cap-del:hover { color: var(--color-hold-red); }
 
 /* inline per-clip thread (reuses <RouteComments variant="inline">) */
 .rd-thread { padding: 4px 20px 20px; border-top: 1px solid var(--hairline-soft); }
@@ -257,14 +265,4 @@
   .rd-icon-btn { width: 44px; height: 44px; }
   .rd-senders { padding-left: 0; }
   .rd-senders-menu { left: 0; }
-  /* let the stats (views/comments/delete) wrap onto their own line below the
-     caption so the text gets the full width — otherwise they squeeze height +
-     date into a sliver and it breaks word-by-word. */
-  .rd-player-cap { flex-wrap: wrap; row-gap: 12px; }
-  .rd-cap-stats { width: 100%; padding-left: 54px; }
-  /* drop height + date beneath the username on their own single line; dim it
-     and hide the now-leading dot. */
-  .rd-cap-who { flex-direction: column; align-items: flex-start; gap: 3px; }
-  .rd-cap-sub { color: var(--color-slate-400); white-space: nowrap; }
-  .rd-cap-sub .dot:first-child { display: none; }
 }

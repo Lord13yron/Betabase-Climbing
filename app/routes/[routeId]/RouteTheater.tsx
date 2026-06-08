@@ -17,6 +17,7 @@ import {
   MessageIcon,
   EyeIcon,
   VideoIcon,
+  TrashIcon,
 } from './icons'
 
 // Richer than the original GalleryVideo: the port's page.tsx extends the
@@ -185,6 +186,24 @@ export function RouteTheater({
             ) : (
               <div className="rd-player-state">Processing…</div>
             )}
+
+            {active && active.status === 'ready' && (
+              <span className="rd-overlay-views">
+                <EyeIcon />
+                {active.view_count + (viewBumps[active.id] ?? 0)}
+              </span>
+            )}
+            {active && activeCanDelete && (
+              <button
+                type="button"
+                className="rd-overlay-del"
+                aria-label="Delete video"
+                title="Delete video"
+                onClick={() => setConfirmId(active.id)}
+              >
+                <TrashIcon />
+              </button>
+            )}
           </div>
 
           {active && (
@@ -217,10 +236,6 @@ export function RouteTheater({
                 {active.caption && <p className="rd-cap-txt">{`“${active.caption}”`}</p>}
               </div>
               <div className="rd-cap-stats">
-                <span className="rd-cap-stat is-static">
-                  <EyeIcon />
-                  {active.view_count + (viewBumps[active.id] ?? 0)}
-                </span>
                 <button
                   type="button"
                   className="rd-cap-stat"
@@ -230,15 +245,6 @@ export function RouteTheater({
                   <MessageIcon />
                   {active.comments.length}
                 </button>
-                {activeCanDelete && (
-                  <button
-                    type="button"
-                    className="rd-cap-del"
-                    onClick={() => setConfirmId(active.id)}
-                  >
-                    Delete
-                  </button>
-                )}
               </div>
             </div>
           )}

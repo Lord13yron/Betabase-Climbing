@@ -22,3 +22,4 @@ export const VideoIcon = P('<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.8
 export const MessageIcon = P('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>')
 export const EyeIcon = P('<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>')
 export const FlagIcon = P('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>')
+export const TrashIcon = P('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>')
