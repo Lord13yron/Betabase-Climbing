@@ -125,7 +125,7 @@ body {
 /* On app (non-landing) pages the brand nav sits in the normal flow as a solid
    bar instead of floating transparent over a hero. */
 .bb-nav.is-app {
-  position: static;
+  position: relative;
   background: var(--color-slate-900);
   border-bottom: 1px solid var(--hairline-soft);
 }
@@ -294,6 +294,23 @@ body {
     background: rgba(var(--scrim), 0.85);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--hairline-soft);
+  }
+  /* Wrapper around the links + auth block. Transparent on desktop so the bar
+     keeps its Logo / links / right space-between layout; becomes a dropdown
+     panel on mobile (see the 768px query). */
+  .bb-nav-collapse {
+    display: contents;
+  }
+  /* Hamburger toggle — only shown on mobile. */
+  .bb-nav-burger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    color: var(--color-chalk-100);
+    background: none;
+    border: none;
+    cursor: pointer;
   }
   .bb-nav-links {
     display: flex;
@@ -658,12 +675,46 @@ body {
   }
 }
 
+/* Mobile nav: collapse the links + auth block into a hamburger dropdown. */
+@media (max-width: 768px) {
+  .bb-nav-burger {
+    display: inline-flex;
+  }
+  .bb-nav-collapse {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    padding: 20px 22px 24px;
+    background: var(--color-slate-900);
+    border-bottom: 1px solid var(--hairline-soft);
+    box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+  }
+  .bb-nav-collapse.is-open {
+    display: flex;
+  }
+  .bb-nav-links {
+    flex-direction: column;
+    gap: 18px;
+    font-size: 15px;
+  }
+  .bb-nav-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .bb-nav-username {
+    display: inline;
+  }
+}
+
 @media (max-width: 900px) {
   .bb-nav {
     padding: 18px 22px;
-  }
-  .bb-nav-links {
-    display: none;
   }
   .bb-hero-inner,
   .bb-scroll-hint {

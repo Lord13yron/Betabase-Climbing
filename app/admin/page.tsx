@@ -109,13 +109,10 @@ export default async function AdminPage({
     archived: m.archived,
   }))
 
-  const operator = users.find((u) => u.id === user.id)?.username ?? user.email ?? 'operator'
-
   return (
     <AdminConsole
       initialView={initialView}
       focusGymId={gym ?? null}
-      operator={operator}
       today={new Date().toISOString().slice(0, 10)}
       gyms={gyms}
       users={users}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Avatar } from "@/components/Avatar";
 
@@ -17,6 +17,7 @@ type Props = {
   username: string | null;
   avatarUrl: string | null;
   isAuthed: boolean;
+  isAdmin: boolean;
 };
 
 function Logo() {
@@ -44,10 +45,12 @@ const AUTH_ROUTES = new Set([
   "/onboarding",
 ]);
 
-export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
+export function BrandNav({ username, avatarUrl, isAuthed, isAdmin }: Props) {
   const pathname = usePathname();
   const isLanding = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!isLanding) return;
@@ -57,56 +60,112 @@ export function BrandNav({ username, avatarUrl, isAuthed }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isLanding]);
 
-  // The /admin superuser console carries its own top strip + sidebar.
-  if (AUTH_ROUTES.has(pathname) || pathname.startsWith("/admin")) return null;
+  // Collapse the mobile menu on navigation.
+  useEffect(() => setMenuOpen(false), [pathname]);
+
+  // While open, close on Escape or a pointer down outside the bar.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    const onDown = (e: PointerEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [menuOpen]);
+
+  if (AUTH_ROUTES.has(pathname)) return null;
 
   const className =
     "bb-nav" + (isLanding ? (scrolled ? " is-scrolled" : "") : " is-app");
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <header className={className}>
+    <header className={className} ref={headerRef}>
       <Logo />
-      <nav className="bb-nav-links">
-        <Link href="/gyms">Gyms</Link>
-        {isAuthed && <Link href="/upload">Upload</Link>}
-        {isLanding && (
-          <>
-            <a href="#how">How it works</a>
-            <a href="#features">Features</a>
-            <a href="#community">Community</a>
-          </>
-        )}
-      </nav>
-      <div className="bb-nav-right">
-        {isAuthed ? (
-          <>
-            <form action={signOutAction}>
-              <button type="submit" className="bb-btn bb-btn-primary bb-btn-sm">
-                Sign out
-              </button>
-            </form>
-            <Link
-              href="/profile"
-              className="bb-nav-login flex items-center gap-2"
-            >
-              <Avatar src={avatarUrl} name={username} size={28} />
-              <span className="hidden sm:inline">{username}</span>
+      <div className={"bb-nav-collapse" + (menuOpen ? " is-open" : "")}>
+        <nav className="bb-nav-links">
+          <Link href="/gyms" onClick={closeMenu}>
+            Gyms
+          </Link>
+          <Link href="/upload" onClick={closeMenu}>
+            Upload
+          </Link>
+          {isAdmin && (
+            <Link href="/admin" onClick={closeMenu}>
+              Admin
             </Link>
-          </>
-        ) : (
-          <>
-            <Link href="/login" className="bb-nav-login">
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="bb-btn bb-btn-primary bb-btn-sm"
-            >
-              Sign up
-            </Link>
-          </>
-        )}
+          )}
+        </nav>
+        <div className="bb-nav-right">
+          {isAuthed ? (
+            <>
+              <form action={signOutAction}>
+                <button type="submit" className="bb-btn bb-btn-primary bb-btn-sm">
+                  Sign out
+                </button>
+              </form>
+              <Link
+                href="/profile"
+                onClick={closeMenu}
+                className="bb-nav-login flex items-center gap-2"
+              >
+                <Avatar src={avatarUrl} name={username} size={28} />
+                <span className="bb-nav-username">{username}</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" onClick={closeMenu} className="bb-nav-login">
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                onClick={closeMenu}
+                className="bb-btn bb-btn-primary bb-btn-sm"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
+        </div>
       </div>
+      <button
+        type="button"
+        className="bb-nav-burger"
+        aria-label="Menu"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((v) => !v)}
+      >
+        {menuOpen ? (
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path
+              d="M4 7h16M4 12h16M4 17h16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+      </button>
     </header>
   );
 }

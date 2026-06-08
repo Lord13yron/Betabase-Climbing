@@ -2,15 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signOutAction } from '@/app/(auth)/actions'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { CheckIcon, MailIcon, MountainIcon, ShieldIcon, UsersIcon } from './icons'
+import { CheckIcon, MailIcon, MountainIcon, UsersIcon } from './icons'
 import { GymsView } from './GymsView'
 import { AdminsView } from './AdminsView'
 import { MessagesView } from './MessagesView'
 import { GymModal } from './GymModal'
 import { AddAdminModal } from './AddAdminModal'
-import { initials } from './admin-utils'
 import {
   addAdminAction,
   archiveMessageAction,
@@ -44,7 +42,6 @@ type ConfirmState = {
 export function AdminConsole({
   initialView,
   focusGymId,
-  operator,
   today,
   gyms,
   users,
@@ -53,7 +50,6 @@ export function AdminConsole({
 }: {
   initialView: View
   focusGymId: string | null
-  operator: string
   today: string
   gyms: AdminGym[]
   users: AdminUser[]
@@ -329,31 +325,6 @@ export function AdminConsole({
 
   return (
     <div className="a-app">
-      <header className="a-top">
-        <div className="a-brand">
-          <span className="a-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/landing/logo-mark.png" alt="" />
-            Betabase
-          </span>
-          <span className="a-su-tag">
-            <ShieldIcon />
-            Superuser
-          </span>
-        </div>
-        <div className="a-top-r">
-          <span className="a-me">
-            <span className="a-me-av">{initials(operator)}</span>
-            <span className="who">{operator}</span>
-          </span>
-          <form action={signOutAction}>
-            <button type="submit" className="a-signout">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-
       <div className="a-body">
         <aside className="a-side">
           <div className="a-side-label">Console</div>

@@ -50,14 +50,16 @@ export default async function RootLayout({
 
   let username: string | null = null;
   let avatarUrl: string | null = null;
+  let isAdmin = false;
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("username, avatar_url")
+      .select("username, avatar_url, is_admin")
       .eq("id", user.id)
       .single();
     username = data?.username ?? null;
     avatarUrl = data?.avatar_url ?? null;
+    isAdmin = data?.is_admin === true;
   }
 
   return (
@@ -66,7 +68,12 @@ export default async function RootLayout({
       className={`${playfair.variable} ${plexMono.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <BrandNav username={username} avatarUrl={avatarUrl} isAuthed={!!user} />
+        <BrandNav
+          username={username}
+          avatarUrl={avatarUrl}
+          isAuthed={!!user}
+          isAdmin={isAdmin}
+        />
         {children}
         <SiteFooter />
       </body>
