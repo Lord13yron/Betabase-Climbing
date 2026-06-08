@@ -49,10 +49,12 @@ export default async function GymsPage({
 
   // 1) The gym catalog (name/city search preserved from the original page).
   // `image_url` may be null per gym — cards fall back to a deterministic stock
-  // photo when it is (see GymCard.fallbackImage).
+  // photo when it is (see GymCard.fallbackImage). Only 'live' gyms are listed
+  // publicly; draft/archived gyms are managed from the /admin console.
   let request = supabase
     .from('gyms')
     .select('id, name, city, image_url')
+    .eq('status', 'live')
     .order('name')
   if (query) {
     const safe = query.replace(/[,()]/g, ' ')
