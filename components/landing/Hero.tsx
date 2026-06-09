@@ -22,17 +22,17 @@ export function Hero() {
           Find your gym, watch how the locals climbed it, and send your project.
           Community beta for every wall, every grade.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3.5">
+        <div className="flex flex-col items-center gap-3.5 sm:flex-row sm:items-stretch">
           <Link
             href="/gyms"
-            className="bb-btn bb-btn-primary w-full justify-center sm:w-auto"
+            className="bb-btn bb-btn-primary justify-center"
           >
             <Icon name="search" size={18} color="var(--on-accent)" />
             Find your gym
           </Link>
           <Link
             href="/signup"
-            className="bb-btn bb-btn-ghost-light w-full justify-center sm:w-auto"
+            className="bb-btn bb-btn-ghost-light justify-center"
           >
             <Icon name="upload" size={18} color="var(--color-chalk-100)" />
             Upload beta
