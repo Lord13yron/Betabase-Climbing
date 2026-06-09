@@ -22,8 +22,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'routeId is required.' }, { status: 400 })
   }
 
+  // Cap uploads per user per hour so a scripted client can't run up the Mux
+  // bill — direct uploads have no server-enforceable size limit.
+  const { count } = await supabase
+    .from('videos')
+    .select('id', { count: 'exact', head: true })
+    .eq('uploader_id', user.id)
+    .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
+  if ((count ?? 0) >= 10) {
+    return NextResponse.json(
+      { error: 'Upload limit reached. Try again later.' },
+      { status: 429 }
+    )
+  }
+
+  // Confirm the route exists before creating the Mux upload, so a bad id
+  // doesn't leave an orphaned upload behind when the insert's FK fails.
+  const { data: route } = await supabase
+    .from('routes')
+    .select('id')
+    .eq('id', routeId)
+    .maybeSingle()
+  if (!route) {
+    return NextResponse.json({ error: 'Route not found.' }, { status: 400 })
+  }
+
   const upload = await getMux().video.uploads.create({
-    cors_origin: request.headers.get('origin') ?? '*',
+    cors_origin: request.nextUrl.origin,
     new_asset_settings: { playback_policy: ['public'] },
   })
 
@@ -35,6 +60,10 @@ export async function POST(request: NextRequest) {
     caption: typeof caption === 'string' && caption.trim() ? caption.trim() : null,
   })
   if (error) {
+    // Best-effort: don't leave the just-created upload dangling on Mux.
+    await getMux()
+      .video.uploads.cancel(upload.id)
+      .catch(() => {})
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
