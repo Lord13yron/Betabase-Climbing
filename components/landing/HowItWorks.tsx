@@ -18,7 +18,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-slate-800 p-14" id="how">
+    <section className="bg-slate-800 px-5.5 py-14 sm:px-14" id="how">
       <div className="mx-auto mb-20 max-w-300">
         <div className="bb-eyebrow">How it works</div>
         <h2 className="bb-how-title">

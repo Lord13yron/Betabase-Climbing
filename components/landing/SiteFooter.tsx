@@ -52,7 +52,7 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-(--color-slate-900) border-t border-(--hairline-soft)">
-      <div className="mx-auto grid max-w-328 grid-cols-1 gap-15 px-14 pt-20 pb-10 md:grid-cols-[1.4fr_2fr]">
+      <div className="mx-auto grid max-w-328 grid-cols-1 gap-15 px-5.5 pt-20 pb-10 sm:px-14 md:grid-cols-[1.4fr_2fr]">
       <div>
         <Link href="/" className="bb-logo">
           <Image className="bb-logo-mark" src="/landing/logo-mark.png" alt="" width={30} height={30} />
@@ -72,7 +72,7 @@ export function SiteFooter() {
           </a>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-7.5 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-7.5 md:grid-cols-3">
         {COLS.map((c) => (
           <div className="bb-footer-col flex flex-col gap-3.5" key={c.h}>
             <div className="bb-mono-label mb-1">{c.h}</div>
@@ -84,7 +84,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="col-span-full mt-5 flex justify-between border-t border-(--hairline-soft) pt-8.5">
+      <div className="col-span-full mt-5 flex flex-col gap-2.5 border-t border-(--hairline-soft) pt-8.5 sm:flex-row sm:justify-between">
         <span className="bb-mono">© 2026 Betabase</span>
         <span className="bb-mono">Made for climbers, by climbers.</span>
       </div>

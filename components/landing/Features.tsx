@@ -66,7 +66,7 @@ function FeatureRow({ f }: { f: Feature }) {
 
 export function Features() {
   return (
-    <section className="bg-slate-900 p-16" id="features">
+    <section className="bg-slate-900 px-5.5 py-16 sm:px-16" id="features">
       <div className="mx-auto max-w-300">
         {FEATURES.map((f) => (
           <FeatureRow key={f.n} f={f} />

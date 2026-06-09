@@ -72,8 +72,8 @@ export async function FeaturedGyms() {
   );
 
   return (
-    <section className="bg-slate-800 p-16" id="gyms">
-      <div className="mx-auto mb-12 flex max-w-300 items-end justify-between">
+    <section className="bg-slate-800 px-5.5 py-16 sm:px-16" id="gyms">
+      <div className="mx-auto mb-12 flex max-w-300 flex-col items-start gap-4.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="bb-eyebrow">Featured gyms</div>
           <h2 className="bb-section-title">Find your home wall</h2>
