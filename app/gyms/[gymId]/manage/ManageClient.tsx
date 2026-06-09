@@ -12,6 +12,7 @@ import { type Discipline } from '@/lib/grades'
 import { holdColor, holdInk } from '@/lib/holds'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { RouteForm } from './RouteForm'
+import { RouteVideosModal } from './RouteVideosModal'
 import {
   ChevronDownIcon,
   PencilIcon,
@@ -21,6 +22,7 @@ import {
   XIcon,
   LayersIcon,
   EraserIcon,
+  FilmIcon,
 } from './icons'
 import {
   createWallAction,
@@ -80,16 +82,27 @@ export function ManageClient({
   gymId,
   walls,
   routes,
+  videoCounts,
 }: {
   gymId: string
   walls: Wall[]
   routes: Route[]
+  videoCounts: Record<string, number>
 }) {
   const [pending, startTransition] = useTransition()
   const [routeDialog, setRouteDialog] = useState<RouteDialog>({ mode: 'closed' })
   const [confirm, setConfirm] = useState<Confirm | null>(null)
   const [addWallOpen, setAddWallOpen] = useState(false)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+
+  // --- per-route video modal --------------------------------------------
+  // Counts live in state so a delete inside the modal can decrement the row's
+  // chip without a reload.
+  const [counts, setCounts] = useState(videoCounts)
+  const [videosFor, setVideosFor] = useState<Route | null>(null)
+  const onVideoDeleted = useCallback((routeId: string) => {
+    setCounts((c) => ({ ...c, [routeId]: Math.max((c[routeId] ?? 1) - 1, 0) }))
+  }, [])
 
   // --- toast -------------------------------------------------------------
   const [toast, setToast] = useState<{ msg: string; show: boolean }>({ msg: '', show: false })
@@ -213,10 +226,12 @@ export function ManageClient({
               gymId={gymId}
               wall={wall}
               routes={routesForWall(wall.id)}
+              videoCounts={counts}
               collapsed={!!collapsed[wall.id]}
               onToggle={() => toggle(wall.id)}
               onRenamed={onWallRenamed}
               onEditRoute={(route) => setRouteDialog({ mode: 'edit', route })}
+              onOpenVideos={setVideosFor}
               onClearRoutes={() => {
                 const count = routesForWall(wall.id).length
                 setConfirm({
@@ -270,6 +285,8 @@ export function ManageClient({
                     <RouteRow
                       key={r.id}
                       route={r}
+                      videoCount={counts[r.id] ?? 0}
+                      onOpenVideos={() => setVideosFor(r)}
                       onEdit={() => setRouteDialog({ mode: 'edit', route: r })}
                       onDelete={() =>
                         setConfirm({
@@ -305,6 +322,16 @@ export function ManageClient({
           />
         )}
       </dialog>
+
+      {videosFor && (
+        <RouteVideosModal
+          key={videosFor.id}
+          gymId={gymId}
+          route={videosFor}
+          onClose={() => setVideosFor(null)}
+          onDeleted={onVideoDeleted}
+        />
+      )}
 
       <ConfirmDialog
         open={confirm !== null}
@@ -371,10 +398,12 @@ function WallSection({
   gymId,
   wall,
   routes,
+  videoCounts,
   collapsed,
   onToggle,
   onRenamed,
   onEditRoute,
+  onOpenVideos,
   onClearRoutes,
   onDeleteRoute,
   onDelete,
@@ -382,10 +411,12 @@ function WallSection({
   gymId: string
   wall: Wall
   routes: Route[]
+  videoCounts: Record<string, number>
   collapsed: boolean
   onToggle: () => void
   onRenamed: () => void
   onEditRoute: (route: Route) => void
+  onOpenVideos: (route: Route) => void
   onClearRoutes: () => void
   onDeleteRoute: (route: Route) => void
   onDelete: () => void
@@ -496,6 +527,8 @@ function WallSection({
               <RouteRow
                 key={r.id}
                 route={r}
+                videoCount={videoCounts[r.id] ?? 0}
+                onOpenVideos={() => onOpenVideos(r)}
                 onEdit={() => onEditRoute(r)}
                 onDelete={() => onDeleteRoute(r)}
               />
@@ -509,10 +542,14 @@ function WallSection({
 
 function RouteRow({
   route,
+  videoCount,
+  onOpenVideos,
   onEdit,
   onDelete,
 }: {
   route: Route
+  videoCount: number
+  onOpenVideos: () => void
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -549,6 +586,15 @@ function RouteRow({
       </div>
 
       <div className="m-row-acts">
+        <button
+          type="button"
+          className={`m-vchip${videoCount === 0 ? ' is-empty' : ''}`}
+          aria-label={`${videoCount} ${videoCount === 1 ? 'video' : 'videos'} — manage`}
+          onClick={onOpenVideos}
+        >
+          <FilmIcon />
+          {videoCount}
+        </button>
         <button type="button" className="m-iconbtn" aria-label="Edit route" onClick={onEdit}>
           <PencilIcon />
         </button>

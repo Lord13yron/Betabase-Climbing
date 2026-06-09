@@ -155,6 +155,40 @@ export async function moveWallAction(
   return { ok: true }
 }
 
+// --- Videos --------------------------------------------------------------
+
+export type RouteVideo = {
+  id: string
+  status: 'pending' | 'ready' | 'errored'
+  mux_playback_id: string | null
+  caption: string | null
+  view_count: number
+  created_at: string
+  uploader_id: string
+  profiles: { username: string; avatar_url: string | null } | null
+}
+
+// Load a single route's videos for the manage modal, newest first. Guarded by
+// canManageGym so only the gym's managers/admins can enumerate its clips; the
+// modal deletes via the shared deleteVideoAction (which re-authorizes).
+export async function listRouteVideosAction(
+  gymId: string,
+  routeId: string
+): Promise<{ error?: string; videos?: RouteVideo[] }> {
+  if (!(await canManageGym(gymId))) return { error: 'Not authorized.' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('videos')
+    .select('id, status, mux_playback_id, caption, view_count, created_at, uploader_id, profiles(username, avatar_url)')
+    .eq('route_id', routeId)
+    .order('created_at', { ascending: false })
+    .returns<RouteVideo[]>()
+
+  if (error) return { error: error.message }
+  return { videos: data ?? [] }
+}
+
 // --- Routes --------------------------------------------------------------
 
 // Shared create/edit. routeId null => insert, otherwise update.

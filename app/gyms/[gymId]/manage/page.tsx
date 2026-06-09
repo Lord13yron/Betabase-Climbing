@@ -16,7 +16,7 @@ export default async function ManageGymPage({
   if (!(await canManageGym(gymId))) redirect(`/gyms/${gymId}`)
 
   const supabase = await createClient()
-  const [gymResult, wallsResult, routesResult] = await Promise.all([
+  const [gymResult, wallsResult, routesResult, videoResult] = await Promise.all([
     supabase.from('gyms').select('id, name, city').eq('id', gymId).single(),
     supabase
       .from('walls')
@@ -27,6 +27,11 @@ export default async function ManageGymPage({
       .from('routes')
       .select('id, name, discipline, color, grade_label, grade_order, wall_id, set_date')
       .eq('gym_id', gymId),
+    supabase
+      .from('videos')
+      .select('route_id, routes!inner(gym_id)')
+      .eq('routes.gym_id', gymId)
+      .returns<{ route_id: string }[]>(),
   ])
 
   const gym = gymResult.data
@@ -34,6 +39,13 @@ export default async function ManageGymPage({
 
   const walls = wallsResult.data ?? []
   const routes = routesResult.data ?? []
+
+  // Tally videos per route so each row can show a count chip without loading
+  // the clips themselves — the modal fetches those on demand when opened.
+  const videoCounts: Record<string, number> = {}
+  for (const { route_id } of videoResult.data ?? []) {
+    videoCounts[route_id] = (videoCounts[route_id] ?? 0) + 1
+  }
 
   return (
     <main className="m-page">
@@ -75,7 +87,12 @@ export default async function ManageGymPage({
         <div className="m-head-rule" />
 
         <div className="m-board">
-          <ManageClient gymId={gymId} walls={walls} routes={routes} />
+          <ManageClient
+            gymId={gymId}
+            walls={walls}
+            routes={routes}
+            videoCounts={videoCounts}
+          />
         </div>
       </div>
     </main>
