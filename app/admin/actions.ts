@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isSuperuser } from '@/lib/auth/is-superuser'
+import { deleteMuxAssets } from '@/lib/mux'
 import type { AdminGym, GymStatus } from './types'
 
 export type FormState = { error?: string; ok?: boolean }
@@ -96,6 +97,16 @@ export async function deleteGymAction(gymId: string): Promise<FormState> {
   if (!(await isSuperuser())) return { error: 'Not authorized.' }
 
   const supabase = await createClient()
+
+  // Clean up the Mux assets for this gym's videos before the gym (and its
+  // walls/routes/videos) cascade away in the DB.
+  const { data: videos } = await supabase
+    .from('videos')
+    .select('mux_asset_id, routes!inner(gym_id)')
+    .eq('routes.gym_id', gymId)
+    .returns<{ mux_asset_id: string | null }[]>()
+  await deleteMuxAssets((videos ?? []).map((v) => v.mux_asset_id))
+
   // walls / routes / videos cascade at the DB level; gym_managers cascades too.
   const { error } = await supabase.from('gyms').delete().eq('id', gymId)
   if (error) return { error: error.message }

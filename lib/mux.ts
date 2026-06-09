@@ -15,3 +15,17 @@ export function getMux(): Mux {
   }
   return client
 }
+
+// Delete the hosted Mux assets backing a set of videos. Best-effort: an asset
+// may already be gone on Mux's side, and deleting the DB rows is what matters.
+// Video rows cascade-delete at the DB level, but Mux assets don't — so call
+// this before deleting anything that cascades to videos (route, wall, or gym).
+// Server-only: do not re-export from a 'use server' file, where it would
+// become an unauthenticated endpoint that deletes arbitrary assets.
+export async function deleteMuxAssets(assetIds: (string | null)[]) {
+  await Promise.allSettled(
+    assetIds
+      .filter((id): id is string => !!id)
+      .map((id) => getMux().video.assets.delete(id))
+  )
+}

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { canManageGym } from '@/lib/auth/can-manage-gym'
-import { getMux } from '@/lib/mux'
+import { deleteMuxAssets } from '@/lib/mux'
 import { type Discipline, gradeOrder } from '@/lib/grades'
 
 export type FormState = { error?: string; ok?: boolean }
@@ -13,18 +13,6 @@ const DISCIPLINES: Discipline[] = ['boulder', 'top_rope', 'lead']
 function revalidateGym(gymId: string) {
   revalidatePath(`/gyms/${gymId}/manage`)
   revalidatePath(`/gyms/${gymId}`)
-}
-
-// Delete the hosted Mux assets backing a set of videos. Best-effort: an asset
-// may already be gone on Mux's side, and deleting the DB rows is what matters.
-// Routes/videos cascade-delete at the DB level, but Mux assets don't — so call
-// this before deleting any routes (single, by wall, or via wall delete).
-async function deleteMuxAssets(assetIds: (string | null)[]) {
-  await Promise.allSettled(
-    assetIds
-      .filter((id): id is string => !!id)
-      .map((id) => getMux().video.assets.delete(id))
-  )
 }
 
 // --- Walls ---------------------------------------------------------------
