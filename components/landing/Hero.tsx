@@ -14,10 +14,7 @@ export function Hero() {
           A climbing beta network
         </div>
         <h1 className="bb-hero-title">
-          <span className="whitespace-nowrap">
-            Every gym.
-            <br className="bb-hero-br-mobile" /> Every route.
-          </span>
+          <span className="whitespace-nowrap">Every gym. Every route.</span>
           <br />
           <span className="bb-accent-italic">Every beta.</span>
         </h1>

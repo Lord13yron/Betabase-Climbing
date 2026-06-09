@@ -393,9 +393,6 @@ body {
     color: var(--color-chalk-50);
     margin: 0 0 24px;
   }
-  .bb-hero-br-mobile {
-    display: none;
-  }
   .bb-hero-sub {
     font-family: var(--font-ui);
     font-size: clamp(16px, 3.8vw, 18px);
@@ -738,9 +735,6 @@ body {
   }
   .bb-hero-title .whitespace-nowrap {
     white-space: normal;
-  }
-  .bb-hero-br-mobile {
-    display: block;
   }
   .bb-step {
     padding: 0;
