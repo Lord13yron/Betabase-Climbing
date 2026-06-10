@@ -6,7 +6,8 @@ import { Avatar } from '@/components/Avatar'
 import { UserSearch } from './UserSearch'
 import {
   FEED_LIMIT, mergeFeed, timeAgo,
-  type ActivityEvent, type CommentFeedRow, type NewRouteRow, type SendFeedRow, type VideoFeedRow,
+  type ActivityEvent, type CommentFeedRow, type NewRouteRow, type SendFeedRow,
+  type VideoCommentFeedRow, type VideoFeedRow,
 } from './feed'
 import { FlagIcon, MessageIcon, PlayIcon, RouteIcon, VideoIcon } from './icons'
 
@@ -20,6 +21,8 @@ const COMMENT_SELECT =
   'id, created_at, body, profiles(username, avatar_url), routes!inner(id, name, color, grade_label, gym_id, gyms(name))'
 const NEW_ROUTE_SELECT =
   'id, name, color, grade_label, created_at, gym_id, gyms!inner(name, image_url)'
+const VIDEO_COMMENT_SELECT =
+  'id, created_at, body, profiles(username, avatar_url), videos!inner(mux_playback_id, uploader_id, route_id, routes!inner(id, name, color, grade_label, gym_id, gyms(name)))'
 
 const NONE = Promise.resolve({ data: null })
 
@@ -27,11 +30,13 @@ const VERB: Record<ActivityEvent['kind'], string> = {
   video: 'shared beta on',
   send: 'sent',
   comment: 'commented on',
+  video_comment: 'commented on beta for',
 }
 const KIND_ICON: Record<ActivityEvent['kind'], React.ReactNode> = {
   video: <VideoIcon />,
   send: <FlagIcon />,
   comment: <MessageIcon />,
+  video_comment: <MessageIcon />,
 }
 
 export default async function CommunityPage() {
@@ -58,17 +63,29 @@ export default async function CommunityPage() {
   const sendQ = () =>
     supabase.from('sends').select(SEND_SELECT)
       .order('sent_at', { ascending: false }).limit(FEED_LIMIT)
+  const videoCommentQ = () =>
+    supabase.from('comments').select(VIDEO_COMMENT_SELECT)
+      .order('created_at', { ascending: false }).limit(FEED_LIMIT)
+
+  // Comments others leave on the viewer's videos: shown to every logged-in
+  // user, whichever feed branch they get. Own replies excluded.
+  const myVideoCommentsQ = user
+    ? videoCommentQ().eq('videos.uploader_id', user.id).neq('author_id', user.id)
+        .returns<VideoCommentFeedRow[]>()
+    : NONE
 
   let videoRows: VideoFeedRow[] = []
   let sendRows: SendFeedRow[] = []
   let commentRows: CommentFeedRow[] = []
   let newRouteRows: NewRouteRow[] = []
+  let videoCommentRows: VideoCommentFeedRow[] = []
 
   if (personalized) {
-    // Up to six bounded queries: videos + sends + new routes at favorite gyms,
-    // plus videos + sends + comments on favorite routes. Overlap is deduped in
-    // mergeFeed. 50-row caps keep this cheap at current scale.
-    const [gymVideos, gymSends, gymRoutes, routeVideos, routeSends, routeComments] = await Promise.all([
+    // Up to eight bounded queries: videos + sends + new routes at favorite
+    // gyms, videos + sends + comments + video comments on favorite routes,
+    // plus comments on the viewer's videos. Overlap is deduped in mergeFeed.
+    // 50-row caps keep this cheap at current scale.
+    const [gymVideos, gymSends, gymRoutes, routeVideos, routeSends, routeComments, routeVideoComments, myVideoComments] = await Promise.all([
       favGymIds.length > 0 ? videoQ().in('routes.gym_id', favGymIds).returns<VideoFeedRow[]>() : NONE,
       favGymIds.length > 0 ? sendQ().in('routes.gym_id', favGymIds).returns<SendFeedRow[]>() : NONE,
       favGymIds.length > 0
@@ -81,22 +98,29 @@ export default async function CommunityPage() {
         ? supabase.from('comments').select(COMMENT_SELECT).in('route_id', favRouteIds)
             .order('created_at', { ascending: false }).limit(FEED_LIMIT).returns<CommentFeedRow[]>()
         : NONE,
+      favRouteIds.length > 0
+        ? videoCommentQ().in('videos.route_id', favRouteIds).returns<VideoCommentFeedRow[]>()
+        : NONE,
+      myVideoCommentsQ,
     ])
     videoRows = [...(gymVideos.data ?? []), ...(routeVideos.data ?? [])]
     sendRows = [...(gymSends.data ?? []), ...(routeSends.data ?? [])]
     commentRows = routeComments.data ?? []
     newRouteRows = gymRoutes.data ?? []
+    videoCommentRows = [...(myVideoComments.data ?? []), ...(routeVideoComments.data ?? [])]
   } else {
     // Logged out or no favorites yet: global recent activity across live gyms.
-    const [videos, sends] = await Promise.all([
+    const [videos, sends, myVideoComments] = await Promise.all([
       videoQ().returns<VideoFeedRow[]>(),
       sendQ().returns<SendFeedRow[]>(),
+      myVideoCommentsQ,
     ])
     videoRows = videos.data ?? []
     sendRows = sends.data ?? []
+    videoCommentRows = myVideoComments.data ?? []
   }
 
-  const feed = mergeFeed(videoRows, sendRows, commentRows, newRouteRows)
+  const feed = mergeFeed(videoRows, sendRows, commentRows, newRouteRows, videoCommentRows, user?.id ?? null)
 
   return (
     <div className="cm-root">
@@ -207,7 +231,11 @@ export default async function CommunityPage() {
                         <Link href={`/u/${e.actor.username}`} className="cm-actor">
                           {e.actor.username}
                         </Link>{' '}
-                        <span className="cm-verb">{VERB[e.kind]}</span>{' '}
+                        <span className="cm-verb">
+                          {e.kind === 'video_comment' && e.ownVideo
+                            ? 'commented on your beta on'
+                            : VERB[e.kind]}
+                        </span>{' '}
                         <Link href={`/routes/${e.route.id}`} className="cm-route">
                           <span className="cm-dot" style={{ background: holdColor(e.route.color) }} />
                           {e.route.name}
@@ -215,7 +243,7 @@ export default async function CommunityPage() {
                         </Link>
                         {e.gymName && <span className="cm-gym"> at {e.gymName}</span>}
                       </p>
-                      {e.kind === 'comment' && e.body && (
+                      {(e.kind === 'comment' || e.kind === 'video_comment') && e.body && (
                         <p className="cm-quote">&ldquo;{e.body}&rdquo;</p>
                       )}
                       {e.kind === 'video' && e.body && <p className="cm-cap">{e.body}</p>}
@@ -224,7 +252,7 @@ export default async function CommunityPage() {
                         <span className="cm-when">{timeAgo(e.ts)}</span>
                       </div>
                     </div>
-                    {e.kind === 'video' && (
+                    {(e.kind === 'video' || e.kind === 'video_comment') && (
                       <Link href={`/routes/${e.route.id}`} className="cm-thumb" aria-label={`Watch beta for ${e.route.name}`}>
                         {e.thumb ? (
                           <span className="cm-thumb-img" style={{ backgroundImage: `url('${e.thumb}')` }} />

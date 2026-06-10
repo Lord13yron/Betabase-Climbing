@@ -35,6 +35,17 @@ export type CommentFeedRow = {
   profiles: Actor | null
   routes: RouteEmbed | null
 }
+export type VideoCommentFeedRow = {
+  id: string
+  created_at: string
+  body: string
+  profiles: Actor | null
+  videos: {
+    mux_playback_id: string | null
+    uploader_id: string
+    routes: RouteEmbed | null
+  } | null
+}
 export type NewRouteRow = {
   id: string
   name: string
@@ -46,7 +57,7 @@ export type NewRouteRow = {
 }
 
 export type ActivityEvent = {
-  kind: 'video' | 'send' | 'comment'
+  kind: 'video' | 'send' | 'comment' | 'video_comment'
   key: string
   ts: string
   actor: Actor
@@ -54,6 +65,7 @@ export type ActivityEvent = {
   gymName: string | null
   thumb: string | null
   body: string | null
+  ownVideo?: boolean // video_comment only: the comment is on the viewer's video
 }
 
 // Routes added at one gym on one UTC day, collapsed into a single feed item
@@ -91,7 +103,7 @@ function toEvent(
   ts: string,
   profiles: Actor | null,
   routes: RouteEmbed | null,
-  extra: { thumb?: string | null; body?: string | null } = {}
+  extra: { thumb?: string | null; body?: string | null; ownVideo?: boolean } = {}
 ): ActivityEvent | null {
   if (!profiles || !routes) return null
   return {
@@ -103,6 +115,7 @@ function toEvent(
     gymName: routes.gyms?.name ?? null,
     thumb: extra.thumb ?? null,
     body: extra.body ?? null,
+    ownVideo: extra.ownVideo,
   }
 }
 
@@ -134,7 +147,9 @@ export function mergeFeed(
   videos: VideoFeedRow[],
   sends: SendFeedRow[],
   comments: CommentFeedRow[],
-  newRoutes: NewRouteRow[] = []
+  newRoutes: NewRouteRow[] = [],
+  videoComments: VideoCommentFeedRow[] = [],
+  viewerId: string | null = null
 ): FeedEvent[] {
   const byKey = new Map<string, FeedEvent>()
   const add = (e: FeedEvent | null) => {
@@ -149,6 +164,13 @@ export function mergeFeed(
   for (const s of sends) add(toEvent('send', s.id, s.sent_at, s.profiles, s.routes))
   for (const c of comments) {
     add(toEvent('comment', c.id, c.created_at, c.profiles, c.routes, { body: c.body }))
+  }
+  for (const vc of videoComments) {
+    add(toEvent('video_comment', vc.id, vc.created_at, vc.profiles, vc.videos?.routes ?? null, {
+      thumb: muxThumb(vc.videos?.mux_playback_id ?? null),
+      body: vc.body,
+      ownVideo: vc.videos != null && vc.videos.uploader_id === viewerId,
+    }))
   }
   for (const g of groupNewRoutes(newRoutes)) add(g)
   return [...byKey.values()]
