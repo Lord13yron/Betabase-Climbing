@@ -95,6 +95,9 @@ export function BrandNav({ username, avatarUrl, isAuthed, isAdmin }: Props) {
           <Link href="/gyms" onClick={closeMenu}>
             Gyms
           </Link>
+          <Link href="/community" onClick={closeMenu}>
+            Community
+          </Link>
           <Link href="/upload" onClick={closeMenu}>
             Upload
           </Link>
