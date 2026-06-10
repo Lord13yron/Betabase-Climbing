@@ -1,6 +1,7 @@
 // Feed normalization for /community. Raw rows from videos/sends/comments are
 // mapped into one FeedEvent shape, deduped (a row can match both a favorite
-// gym and a favorite route), and merged newest-first.
+// gym and a favorite route), merged newest-first with newly added routes
+// (grouped per gym per day).
 
 export const FEED_LIMIT = 50
 
@@ -34,8 +35,17 @@ export type CommentFeedRow = {
   profiles: Actor | null
   routes: RouteEmbed | null
 }
+export type NewRouteRow = {
+  id: string
+  name: string
+  color: string | null
+  grade_label: string
+  created_at: string
+  gym_id: string
+  gyms: { name: string; image_url: string | null } | null
+}
 
-export type FeedEvent = {
+export type ActivityEvent = {
   kind: 'video' | 'send' | 'comment'
   key: string
   ts: string
@@ -45,6 +55,18 @@ export type FeedEvent = {
   thumb: string | null
   body: string | null
 }
+
+// Routes added at one gym on one UTC day, collapsed into a single feed item
+// so a wall reset doesn't flood the feed.
+export type RoutesAddedEvent = {
+  kind: 'routes'
+  key: string // routes:<gym_id>:<YYYY-MM-DD>
+  ts: string // newest created_at in the group
+  gym: { id: string; name: string; image_url: string | null }
+  routes: { id: string; name: string; color: string | null; grade: string }[] // newest first
+}
+
+export type FeedEvent = ActivityEvent | RoutesAddedEvent
 
 export function timeAgo(iso: string): string {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -64,13 +86,13 @@ export function muxThumb(playbackId: string | null): string | null {
 }
 
 function toEvent(
-  kind: FeedEvent['kind'],
+  kind: ActivityEvent['kind'],
   id: string,
   ts: string,
   profiles: Actor | null,
   routes: RouteEmbed | null,
   extra: { thumb?: string | null; body?: string | null } = {}
-): FeedEvent | null {
+): ActivityEvent | null {
   if (!profiles || !routes) return null
   return {
     kind,
@@ -84,10 +106,35 @@ function toEvent(
   }
 }
 
+// Rows arrive newest-first (query orders created_at desc), so the first row in
+// a group carries the group's ts and routes stay newest-first.
+function groupNewRoutes(rows: NewRouteRow[]): RoutesAddedEvent[] {
+  const byKey = new Map<string, RoutesAddedEvent>()
+  for (const r of rows) {
+    if (!r.gyms) continue
+    const key = `routes:${r.gym_id}:${r.created_at.slice(0, 10)}`
+    const route = { id: r.id, name: r.name, color: r.color, grade: r.grade_label }
+    const group = byKey.get(key)
+    if (group) {
+      group.routes.push(route)
+    } else {
+      byKey.set(key, {
+        kind: 'routes',
+        key,
+        ts: r.created_at,
+        gym: { id: r.gym_id, name: r.gyms.name, image_url: r.gyms.image_url },
+        routes: [route],
+      })
+    }
+  }
+  return [...byKey.values()]
+}
+
 export function mergeFeed(
   videos: VideoFeedRow[],
   sends: SendFeedRow[],
-  comments: CommentFeedRow[]
+  comments: CommentFeedRow[],
+  newRoutes: NewRouteRow[] = []
 ): FeedEvent[] {
   const byKey = new Map<string, FeedEvent>()
   const add = (e: FeedEvent | null) => {
@@ -103,6 +150,7 @@ export function mergeFeed(
   for (const c of comments) {
     add(toEvent('comment', c.id, c.created_at, c.profiles, c.routes, { body: c.body }))
   }
+  for (const g of groupNewRoutes(newRoutes)) add(g)
   return [...byKey.values()]
     .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
     .slice(0, FEED_LIMIT)

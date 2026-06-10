@@ -6,9 +6,9 @@ import { Avatar } from '@/components/Avatar'
 import { UserSearch } from './UserSearch'
 import {
   FEED_LIMIT, mergeFeed, timeAgo,
-  type CommentFeedRow, type FeedEvent, type SendFeedRow, type VideoFeedRow,
+  type ActivityEvent, type CommentFeedRow, type NewRouteRow, type SendFeedRow, type VideoFeedRow,
 } from './feed'
-import { FlagIcon, MessageIcon, PlayIcon, VideoIcon } from './icons'
+import { FlagIcon, MessageIcon, PlayIcon, RouteIcon, VideoIcon } from './icons'
 
 // `routes!inner` so `.in('routes.gym_id', …)` filters parent rows (and rows
 // with a missing route are dropped either way). RLS hides draft/archived gyms.
@@ -18,15 +18,17 @@ const SEND_SELECT =
   'id, sent_at, profiles(username, avatar_url), routes!inner(id, name, color, grade_label, gym_id, gyms(name))'
 const COMMENT_SELECT =
   'id, created_at, body, profiles(username, avatar_url), routes!inner(id, name, color, grade_label, gym_id, gyms(name))'
+const NEW_ROUTE_SELECT =
+  'id, name, color, grade_label, created_at, gym_id, gyms!inner(name, image_url)'
 
 const NONE = Promise.resolve({ data: null })
 
-const VERB: Record<FeedEvent['kind'], string> = {
+const VERB: Record<ActivityEvent['kind'], string> = {
   video: 'shared beta on',
   send: 'sent',
   comment: 'commented on',
 }
-const KIND_ICON: Record<FeedEvent['kind'], React.ReactNode> = {
+const KIND_ICON: Record<ActivityEvent['kind'], React.ReactNode> = {
   video: <VideoIcon />,
   send: <FlagIcon />,
   comment: <MessageIcon />,
@@ -60,14 +62,19 @@ export default async function CommunityPage() {
   let videoRows: VideoFeedRow[] = []
   let sendRows: SendFeedRow[] = []
   let commentRows: CommentFeedRow[] = []
+  let newRouteRows: NewRouteRow[] = []
 
   if (personalized) {
-    // Up to five bounded queries: videos + sends at favorite gyms, plus
-    // videos + sends + comments on favorite routes. Overlap is deduped in
+    // Up to six bounded queries: videos + sends + new routes at favorite gyms,
+    // plus videos + sends + comments on favorite routes. Overlap is deduped in
     // mergeFeed. 50-row caps keep this cheap at current scale.
-    const [gymVideos, gymSends, routeVideos, routeSends, routeComments] = await Promise.all([
+    const [gymVideos, gymSends, gymRoutes, routeVideos, routeSends, routeComments] = await Promise.all([
       favGymIds.length > 0 ? videoQ().in('routes.gym_id', favGymIds).returns<VideoFeedRow[]>() : NONE,
       favGymIds.length > 0 ? sendQ().in('routes.gym_id', favGymIds).returns<SendFeedRow[]>() : NONE,
+      favGymIds.length > 0
+        ? supabase.from('routes').select(NEW_ROUTE_SELECT).in('gym_id', favGymIds)
+            .order('created_at', { ascending: false }).limit(FEED_LIMIT).returns<NewRouteRow[]>()
+        : NONE,
       favRouteIds.length > 0 ? videoQ().in('route_id', favRouteIds).returns<VideoFeedRow[]>() : NONE,
       favRouteIds.length > 0 ? sendQ().in('route_id', favRouteIds).returns<SendFeedRow[]>() : NONE,
       favRouteIds.length > 0
@@ -78,6 +85,7 @@ export default async function CommunityPage() {
     videoRows = [...(gymVideos.data ?? []), ...(routeVideos.data ?? [])]
     sendRows = [...(gymSends.data ?? []), ...(routeSends.data ?? [])]
     commentRows = routeComments.data ?? []
+    newRouteRows = gymRoutes.data ?? []
   } else {
     // Logged out or no favorites yet: global recent activity across live gyms.
     const [videos, sends] = await Promise.all([
@@ -88,7 +96,7 @@ export default async function CommunityPage() {
     sendRows = sends.data ?? []
   }
 
-  const feed = mergeFeed(videoRows, sendRows, commentRows)
+  const feed = mergeFeed(videoRows, sendRows, commentRows, newRouteRows)
 
   return (
     <div className="cm-root">
@@ -101,7 +109,7 @@ export default async function CommunityPage() {
             </h1>
             <p className="cm-sub">
               {personalized
-                ? 'New beta videos, sends, and route chatter from your favorite gyms and routes.'
+                ? 'New routes, beta videos, sends, and route chatter from your favorite gyms and routes.'
                 : 'Recent beta videos and sends from gyms across Betabase.'}
             </p>
           </header>
@@ -143,7 +151,53 @@ export default async function CommunityPage() {
               </div>
             ) : (
               <div className="cm-feed">
-                {feed.map((e) => (
+                {feed.map((e) => e.kind === 'routes' ? (
+                  <article className="cm-row" key={e.key}>
+                    <Link href={`/gyms/${e.gym.id}`} className="cm-row-avatar">
+                      <Avatar src={e.gym.image_url} name={e.gym.name} size={38} />
+                    </Link>
+                    <div className="cm-row-body">
+                      <p className="cm-row-line">
+                        <Link href={`/gyms/${e.gym.id}`} className="cm-actor">
+                          {e.gym.name}
+                        </Link>{' '}
+                        <span className="cm-verb">
+                          {e.routes.length === 1 ? 'added' : `added ${e.routes.length} new routes`}
+                        </span>
+                        {e.routes.length === 1 && (
+                          <>
+                            {' '}
+                            <Link href={`/routes/${e.routes[0].id}`} className="cm-route">
+                              <span className="cm-dot" style={{ background: holdColor(e.routes[0].color) }} />
+                              {e.routes[0].name}
+                              <span className="cm-grade">{e.routes[0].grade}</span>
+                            </Link>
+                          </>
+                        )}
+                      </p>
+                      {e.routes.length > 1 && (
+                        <p className="cm-routelist">
+                          {e.routes.slice(0, 3).map((r) => (
+                            <Link key={r.id} href={`/routes/${r.id}`} className="cm-route">
+                              <span className="cm-dot" style={{ background: holdColor(r.color) }} />
+                              {r.name}
+                              <span className="cm-grade">{r.grade}</span>
+                            </Link>
+                          ))}
+                          {e.routes.length > 3 && (
+                            <Link href={`/gyms/${e.gym.id}`} className="cm-more">
+                              +{e.routes.length - 3} more
+                            </Link>
+                          )}
+                        </p>
+                      )}
+                      <div className="cm-row-meta">
+                        <span className="cm-kind"><RouteIcon /></span>
+                        <span className="cm-when">{timeAgo(e.ts)}</span>
+                      </div>
+                    </div>
+                  </article>
+                ) : (
                   <article className="cm-row" key={e.key}>
                     <Link href={`/u/${e.actor.username}`} className="cm-row-avatar">
                       <Avatar src={e.actor.avatar_url} name={e.actor.username} size={38} />
