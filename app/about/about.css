@@ -1,0 +1,32 @@
+/* About page — dark concrete-slate system. Token values mirror contact.css. */
+
+.ab-page { background: var(--color-slate-900); color: var(--fg); font-family: var(--font-ui); }
+.ab-main { background: var(--color-slate-800); min-height: 100vh; }
+.ab-wrap { max-width: 1120px; margin: 0 auto; padding: 0 40px 84px; }
+.ab-page *, .ab-page *::before, .ab-page *::after { box-sizing: border-box; }
+
+/* ---- hero ---- */
+.ab-hero { padding: 44px 0 0; max-width: 680px; }
+.ab-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-family: var(--font-mono);
+  font-weight: 500; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--color-plywood-400); }
+.ab-eyebrow::before { content: ""; width: 30px; height: 1px; background: currentColor; opacity: 0.7; }
+.ab-title { font-family: var(--font-display); font-weight: 700; font-size: 44px; line-height: 0.98;
+  letter-spacing: -0.02em; color: var(--color-chalk-50); margin: 12px 0 0; }
+.ab-sub { font-family: var(--font-ui); font-size: 16px; line-height: 1.55; color: var(--color-chalk-200);
+  margin: 14px 0 0; }
+
+/* ---- prose ---- */
+.ab-body { max-width: 680px; margin-top: 48px; }
+.ab-h2 { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.1;
+  color: var(--color-chalk-50); margin: 44px 0 0; }
+.ab-p { font-family: var(--font-ui); font-size: 16px; line-height: 1.65; color: var(--color-chalk-200);
+  margin: 16px 0 0; }
+
+/* ---- responsive ---- */
+@media (max-width: 720px) {
+  .ab-wrap { padding: 0 20px 64px; }
+  .ab-title { font-size: 36px; }
+  .ab-body { margin-top: 36px; }
+  .ab-h2 { margin-top: 36px; }
+}
