@@ -2,7 +2,9 @@
 
 ## Active Build
 
-**Active build plan: see [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md).** Build one step at a time: implement the next unchecked step in its Progress list, verify it against the step's gate, check the box, and commit. Do not start a later step until the current one passes.
+**Active build plan: see [`docs/MOBILE_BUILD_PLAN.md`](docs/MOBILE_BUILD_PLAN.md)** (React Native + Expo app in `mobile/`). Build one section at a time: implement the next unchecked section in its Progress list, verify it against the section's gate, check the box, and commit. Do not start a later section until the current one passes.
+
+The completed website build plan is archived at [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md); use it as reference for data-model and web-side decisions.
 
 ## Project Overview
 
