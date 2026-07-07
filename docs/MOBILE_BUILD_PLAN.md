@@ -6,7 +6,7 @@
 ## Progress
 
 - [x] **S0** — Expo scaffold + theme + shared libs
-- [ ] **S1** — Supabase client + email auth + onboarding gate
+- [x] **S1** — Supabase client + email auth + onboarding gate
 - [ ] **S2** — EAS dev build + Google OAuth
 - [ ] **S3** — Aggregate views/RPCs (SQL only)
 - [ ] **S4** — Gyms directory

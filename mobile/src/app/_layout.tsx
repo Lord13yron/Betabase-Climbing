@@ -20,6 +20,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { SessionProvider, useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -53,20 +54,47 @@ export default function RootLayout() {
     PlayfairDisplay_700Bold,
   });
 
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
   if (!loaded && !error) {
     return null;
   }
 
   return (
-    <ThemeProvider value={navTheme}>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }} />
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider value={navTheme}>
+        <StatusBar style="light" />
+        <RootNavigator fontsReady={loaded || !!error} />
+      </ThemeProvider>
+    </SessionProvider>
+  );
+}
+
+// Guarded navigator: the session state decides which route group is reachable,
+// replacing the website's middleware gate (lib/supabase/session.ts). Splash
+// stays up until fonts AND the initial session/profile resolve.
+function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
+  const { session, username, loading } = useSession();
+
+  useEffect(() => {
+    if (fontsReady && !loading) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsReady, loading]);
+
+  if (loading) {
+    return null;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!session}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && !username}>
+        <Stack.Screen name="onboarding" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && !!username}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
   );
 }
