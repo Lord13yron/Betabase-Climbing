@@ -123,6 +123,46 @@ export function FormError({ children }: { children: string }) {
   );
 }
 
+// A hairline "or" separator between the email form and the Google button.
+export function OrDivider() {
+  return (
+    <View style={styles.divider}>
+      <View style={styles.dividerLine} />
+      <Text style={styles.dividerText}>or</Text>
+      <View style={styles.dividerLine} />
+    </View>
+  );
+}
+
+// Outline (secondary) button for Google OAuth, paired with SubmitButton.
+export function GoogleButton({
+  pending,
+  disabled,
+  onPress,
+}: {
+  pending: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const isDisabled = pending || disabled;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      style={({ pressed }) => [
+        styles.googleButton,
+        isDisabled && styles.buttonDisabled,
+        pressed && !isDisabled && styles.googleButtonPressed,
+      ]}>
+      {pending ? (
+        <ActivityIndicator color={colors.fg} />
+      ) : (
+        <Text style={styles.googleButtonLabel}>Continue with Google</Text>
+      )}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
@@ -201,6 +241,41 @@ const styles = StyleSheet.create({
     fontFamily: fonts.uiSemi,
     fontSize: 16,
     color: colors.onAccent,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space(3),
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.hairline,
+  },
+  dividerText: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 11,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: colors.fgFaint,
+  },
+  googleButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radii.md,
+    paddingVertical: space(4),
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  googleButtonPressed: {
+    backgroundColor: colors.surfaceHover,
+  },
+  googleButtonLabel: {
+    fontFamily: fonts.uiSemi,
+    fontSize: 16,
+    color: colors.fg,
   },
   errorBox: {
     backgroundColor: 'rgba(197, 80, 70, 0.12)',

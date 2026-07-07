@@ -5,10 +5,13 @@ import {
   AuthShell,
   Field,
   FormError,
+  GoogleButton,
+  OrDivider,
   SubmitButton,
   SwitchLink,
 } from '@/components/auth/auth-ui';
 import { isValidEmail } from '@/lib/auth-validation';
+import { signInWithGoogle } from '@/lib/google-auth';
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, space } from '@/lib/theme';
 
@@ -17,7 +20,17 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+
+  async function onGoogle() {
+    setError(null);
+    setGooglePending(true);
+    const { error } = await signInWithGoogle();
+    setGooglePending(false);
+    // On success, onAuthStateChange flips the gate to onboarding or tabs.
+    if (error) setError(error);
+  }
 
   async function onSubmit() {
     setError(null);
@@ -83,9 +96,11 @@ export default function SignupScreen() {
         label="Create account"
         pendingLabel="Creating account"
         pending={pending}
-        disabled={!email || !password}
+        disabled={!email || !password || googlePending}
         onPress={onSubmit}
       />
+      <OrDivider />
+      <GoogleButton pending={googlePending} disabled={pending} onPress={onGoogle} />
       <SwitchLink prompt="Already climbing with us?" href="/login" action="Log in" />
     </AuthShell>
   );
