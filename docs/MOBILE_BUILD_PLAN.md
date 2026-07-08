@@ -9,7 +9,7 @@
 - [x] **S1** — Supabase client + email auth + onboarding gate
 - [x] **S2** — EAS dev build + Google OAuth
 - [x] **S3** — Aggregate views/RPCs (SQL only)
-- [ ] **S4** — Gyms directory
+- [x] **S4** — Gyms directory
 - [ ] **S5** — Gym detail + route browser
 - [ ] **S6** — Route detail: playback, sends, favorites
 - [ ] **S7** — Comments
@@ -34,7 +34,7 @@ Key architectural difference from the website: there are no server components or
 | Area | Decision |
 |---|---|
 | Scope | Climber core only: auth + onboarding, gyms, route browsing, playback, upload, sends, favorites, comments, community feed, profiles. No manager/admin/marketing surfaces. |
-| Data layer | Direct `@supabase/supabase-js` calls under RLS. Per-gym/per-route aggregate counts move to Postgres views/RPCs (S3) instead of replicating the website's in-memory aggregation. |
+| Data layer | Direct `@supabase/supabase-js` calls under RLS. Per-gym/per-route aggregate counts move to Postgres views/RPCs (S3) instead of replicating the website's in-memory aggregation. Screens fetch with **TanStack React Query** (`useQuery`/`useMutation`, provider in the root layout) — decided in S4, the pattern for S5–S10. |
 | Repo layout | `mobile/` folder, self-contained Expo app (no monorepo tooling). Pure lib files are **copied** into `mobile/lib/`: `lib/grades.ts`, `lib/height.ts`, `lib/holds.ts`, the `Comment` type from `lib/comments.ts`, and the feed normalizer from `app/community/feed.ts`. |
 | Auth | Email/password + Google OAuth, both in v1. Sessions persisted with the AsyncStorage adapter (official Supabase RN pattern). Google via `signInWithOAuth` + `expo-web-browser`/`expo-auth-session` deep link (scheme `betabase://`). Password reset and signup confirmation emails keep linking to the website; no in-app deep-link handling for those in v1. |
 | Styling | Plain RN `StyleSheet` + `mobile/lib/theme.ts` translated from the `@theme` tokens in `app/globals.css`. Fonts via `@expo-google-fonts` (Hanken Grotesk, IBM Plex Mono, Playfair Display). No NativeWind. |

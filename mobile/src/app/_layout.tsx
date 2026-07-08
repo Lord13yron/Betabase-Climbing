@@ -14,6 +14,7 @@ import {
   PlayfairDisplay_600SemiBold_Italic,
   PlayfairDisplay_700Bold,
 } from '@expo-google-fonts/playfair-display';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,6 +25,9 @@ import { SessionProvider, useSession } from '@/lib/session';
 import { colors } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
+
+// One client for the whole app; screens fetch Supabase data with useQuery.
+const queryClient = new QueryClient();
 
 // Navigation surfaces (headers, screen backgrounds, tab bar fallbacks)
 // themed to the brand palette.
@@ -60,10 +64,12 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <ThemeProvider value={navTheme}>
-        <StatusBar style="light" />
-        <RootNavigator fontsReady={loaded || !!error} />
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={navTheme}>
+          <StatusBar style="light" />
+          <RootNavigator fontsReady={loaded || !!error} />
+        </ThemeProvider>
+      </QueryClientProvider>
     </SessionProvider>
   );
 }
@@ -94,6 +100,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
       </Stack.Protected>
       <Stack.Protected guard={!!session && !!username}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="gyms/[gymId]" />
       </Stack.Protected>
     </Stack>
   );
