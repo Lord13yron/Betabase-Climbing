@@ -56,8 +56,8 @@ export function RouteRow({
               {DISCIPLINE_LABEL[route.discipline]}
               {'  ·  '}
               {wallName}
-              {setLabel ? `  ·  Set ${setLabel}` : ''}
             </Text>
+            {setLabel ? <Text style={styles.setLabel}>Set {setLabel}</Text> : null}
           </View>
           <View style={styles.stats}>
             <View style={styles.stat}>
@@ -181,6 +181,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 12,
     color: colors.fgMuted,
+  },
+  setLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 11,
+    color: colors.fgFaint,
   },
   stats: {
     flexDirection: 'row',
