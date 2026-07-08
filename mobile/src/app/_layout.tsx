@@ -101,6 +101,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
       <Stack.Protected guard={!!session && !!username}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="gyms/[gymId]" />
+        <Stack.Screen name="routes/[routeId]" />
       </Stack.Protected>
     </Stack>
   );

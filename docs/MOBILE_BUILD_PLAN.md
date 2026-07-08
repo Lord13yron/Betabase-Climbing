@@ -10,7 +10,7 @@
 - [x] **S2** — EAS dev build + Google OAuth
 - [x] **S3** — Aggregate views/RPCs (SQL only)
 - [x] **S4** — Gyms directory
-- [ ] **S5** — Gym detail + route browser
+- [x] **S5** — Gym detail + route browser
 - [ ] **S6** — Route detail: playback, sends, favorites
 - [ ] **S7** — Comments
 - [ ] **S8** — Beta upload
