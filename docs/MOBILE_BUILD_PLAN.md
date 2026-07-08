@@ -8,7 +8,7 @@
 - [x] **S0** — Expo scaffold + theme + shared libs
 - [x] **S1** — Supabase client + email auth + onboarding gate
 - [x] **S2** — EAS dev build + Google OAuth
-- [ ] **S3** — Aggregate views/RPCs (SQL only)
+- [x] **S3** — Aggregate views/RPCs (SQL only)
 - [ ] **S4** — Gyms directory
 - [ ] **S5** — Gym detail + route browser
 - [ ] **S6** — Route detail: playback, sends, favorites
@@ -95,7 +95,7 @@ The website computes per-gym and per-route aggregates in memory inside server co
 
 - View or RPC for the gyms directory: route counts per gym by discipline (reference the aggregation in `app/gyms/page.tsx`).
 - View or RPC for a gym's route list: per-route beta-video count (ready only) and send count (reference `app/gyms/[gymId]/page.tsx`).
-- RPC for a route's senders strip if the website builds it in memory (reference `app/routes/[routeId]/page.tsx`).
+- RPC for a route's senders strip if the website builds it in memory (reference `app/routes/[routeId]/page.tsx`). *Resolved in S3: not needed — the website uses a plain `sends → profiles` embed query that supabase-js runs unchanged from the app (see S6).*
 - Grant `select`/`execute` to `anon` + `authenticated`; views must respect `is_gym_visible` the same way page queries do.
 
 *Verify:* run each view/RPC in the SQL editor against real data; counts match what the live website displays for the same gym/route.
