@@ -1,47 +1,149 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { supabase } from '@/lib/supabase';
-import { colors, fonts, space } from '@/lib/theme';
+import { RouteActions } from '@/components/routes/route-actions';
+import { RouteTheater } from '@/components/routes/route-theater';
+import { SendersStrip } from '@/components/routes/senders-strip';
+import type { Discipline } from '@/lib/grades';
+import { holdColor, holdInk } from '@/lib/holds';
+import {
+  fetchMyRouteState,
+  fetchRouteDetail,
+  fetchRouteVideos,
+  fetchSenders,
+} from '@/lib/route-detail';
+import { useSession } from '@/lib/session';
+import { colors, fonts, radii, space } from '@/lib/theme';
 
-// S5 stub so route rows have somewhere to navigate. S6 replaces this with the
-// real route detail: playback, sends, favorites.
+const DISCIPLINE_LABEL: Record<Discipline, string> = {
+  boulder: 'Boulder',
+  top_rope: 'Top rope',
+  lead: 'Lead',
+};
+
+// Route detail ported from the web app/routes/[routeId]/page.tsx, S6 scope:
+// header + send/favorite actions, senders strip, beta theater. Comments (S7)
+// and upload entry (S8) come later.
 export default function RouteScreen() {
   const { routeId } = useLocalSearchParams<{ routeId: string }>();
   const router = useRouter();
+  const { session } = useSession();
+  const userId = session?.user.id;
 
   const routeQuery = useQuery({
-    queryKey: ['route-stub', routeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('routes')
-        .select('name, grade_label')
-        .eq('id', routeId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryKey: ['route-detail', routeId],
+    queryFn: () => fetchRouteDetail(routeId),
+  });
+  const videosQuery = useQuery({
+    queryKey: ['route-videos', routeId],
+    queryFn: () => fetchRouteVideos(routeId),
+  });
+  const sendersQuery = useQuery({
+    queryKey: ['route-senders', routeId],
+    queryFn: () => fetchSenders(routeId),
+  });
+  const myStateQuery = useQuery({
+    queryKey: ['route-my-state', routeId, userId],
+    queryFn: () => fetchMyRouteState(userId!, routeId),
+    enabled: !!userId,
   });
 
-  return (
-    <SafeAreaView style={styles.page} edges={['top', 'bottom']}>
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={space(2)}
-        style={({ pressed }) => [styles.back, pressed && styles.backPressed]}>
-        <Ionicons name="chevron-back" size={18} color={colors.fg} />
-        <Text style={styles.backLabel}>Back</Text>
-      </Pressable>
-      <View style={styles.body}>
-        <Text style={styles.eyebrow}>
-          {routeQuery.data?.grade_label ? `Route · ${routeQuery.data.grade_label}` : 'Route'}
-        </Text>
-        <Text style={styles.title}>{routeQuery.data?.name ?? ' '}</Text>
-        <Text style={styles.note}>Beta videos, sends, and favorites land here. Built in S6.</Text>
+  const route = routeQuery.data;
+
+  if (routeQuery.isPending || videosQuery.isPending || sendersQuery.isPending) {
+    return (
+      <View style={[styles.page, styles.center]}>
+        <ActivityIndicator color={colors.accent} />
       </View>
+    );
+  }
+
+  if (routeQuery.isError || videosQuery.isError || sendersQuery.isError || !route) {
+    return (
+      <View style={[styles.page, styles.center]}>
+        <Text style={styles.errorTitle}>Something went wrong</Text>
+        <Text style={styles.errorText}>We could not load this route.</Text>
+        <View style={styles.errorBtns}>
+          <Pressable
+            style={styles.outlineBtn}
+            onPress={() => {
+              routeQuery.refetch();
+              videosQuery.refetch();
+              sendersQuery.refetch();
+            }}>
+            <Text style={styles.outlineBtnLabel}>Try again</Text>
+          </Pressable>
+          <Pressable style={styles.outlineBtn} onPress={() => router.back()}>
+            <Text style={styles.outlineBtnLabel}>Back</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  const band = holdColor(route.color);
+  const ink = holdInk(route.color);
+  const wallName = route.walls?.name ?? 'Unassigned';
+  const setDate = route.set_date
+    ? new Date(route.set_date).toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        month: 'short',
+        day: 'numeric',
+      })
+    : null;
+  const { senders, totalSends } = sendersQuery.data ?? { senders: [], totalSends: 0 };
+
+  return (
+    <SafeAreaView style={styles.page} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={space(2)}
+          style={({ pressed }) => [styles.crumb, pressed && styles.crumbPressed]}>
+          <Ionicons name="chevron-back" size={18} color={colors.fg} />
+          <Text style={styles.crumbLabel} numberOfLines={1}>
+            {route.gyms?.name ?? 'Back'}
+          </Text>
+        </Pressable>
+
+        {/* route header */}
+        <View style={styles.head}>
+          <View style={[styles.gradeChip, { backgroundColor: band }]}>
+            <Text style={[styles.gradeLabel, { color: ink }]}>{route.grade_label}</Text>
+            {route.color && !route.color.startsWith('#') ? (
+              <Text style={[styles.gradeColor, { color: ink }]} numberOfLines={1}>
+                {route.color}
+              </Text>
+            ) : null}
+          </View>
+          <View style={styles.headMain}>
+            {route.gyms ? <Text style={styles.eyebrow}>{route.gyms.name}</Text> : null}
+            <Text style={styles.name}>{route.name}</Text>
+            <Text style={styles.meta}>
+              {DISCIPLINE_LABEL[route.discipline]}
+              {route.color ? `  ·  ${route.color}` : ''}
+              {`  ·  ${wallName}`}
+              {setDate ? `  ·  Set ${setDate}` : ''}
+            </Text>
+          </View>
+        </View>
+
+        <RouteActions
+          routeId={route.id}
+          gymId={route.gym_id}
+          sent={myStateQuery.data?.sent ?? false}
+          favorited={myStateQuery.data?.favorited ?? false}
+        />
+
+        <SendersStrip senders={senders} totalSends={totalSends} />
+
+        <View style={styles.rule} />
+
+        <RouteTheater videos={videosQuery.data ?? []} />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -51,47 +153,113 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
-  back: {
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space(8),
+    gap: space(2.5),
+  },
+  scroll: {
+    paddingHorizontal: space(4),
+    paddingBottom: space(10),
+    gap: space(4),
+  },
+  crumb: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space(0.5),
     alignSelf: 'flex-start',
-    marginHorizontal: space(4),
     marginTop: space(2),
     paddingVertical: space(1),
     paddingRight: space(2),
   },
-  backPressed: {
+  crumbPressed: {
     opacity: 0.7,
   },
-  backLabel: {
+  crumbLabel: {
     fontFamily: fonts.uiMedium,
     fontSize: 15,
     color: colors.fg,
   },
-  body: {
-    paddingHorizontal: space(6),
-    paddingTop: space(6),
-    gap: space(3),
+  head: {
+    flexDirection: 'row',
+    gap: space(3.5),
+  },
+  gradeChip: {
+    width: 72,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space(0.5),
+    paddingVertical: space(3),
+    paddingHorizontal: space(1),
+  },
+  gradeLabel: {
+    fontFamily: fonts.uiBold,
+    fontSize: 18,
+  },
+  gradeColor: {
+    fontFamily: fonts.monoMedium,
+    fontSize: 9,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    opacity: 0.85,
+  },
+  headMain: {
+    flex: 1,
+    gap: space(1),
+    justifyContent: 'center',
   },
   eyebrow: {
     fontFamily: fonts.monoMedium,
-    fontSize: 12,
-    letterSpacing: 2.6,
+    fontSize: 11,
+    letterSpacing: 2.2,
     textTransform: 'uppercase',
     color: colors.accent,
   },
-  title: {
+  name: {
     fontFamily: fonts.display,
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 28,
+    lineHeight: 34,
     color: colors.chalk50,
   },
-  note: {
+  meta: {
     fontFamily: fonts.ui,
-    fontSize: 15,
-    lineHeight: 23,
+    fontSize: 13,
     color: colors.fgMuted,
-    maxWidth: 320,
+  },
+  rule: {
+    height: 1,
+    backgroundColor: colors.hairlineSoft,
+  },
+  errorTitle: {
+    fontFamily: fonts.uiSemi,
+    fontSize: 17,
+    color: colors.chalk50,
+  },
+  errorText: {
+    fontFamily: fonts.ui,
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.fgMuted,
+    textAlign: 'center',
+  },
+  errorBtns: {
+    flexDirection: 'row',
+    gap: space(3),
+    marginTop: space(1),
+  },
+  outlineBtn: {
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderRadius: radii.sm,
+    backgroundColor: colors.surface,
+    paddingHorizontal: space(4),
+    paddingVertical: space(2),
+  },
+  outlineBtnLabel: {
+    fontFamily: fonts.uiMedium,
+    fontSize: 13,
+    color: colors.fg,
   },
 });
