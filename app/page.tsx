@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <main className="bb-landing">
       <Hero />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
       <Features />
       <FeaturedGyms />
       <CTABand />

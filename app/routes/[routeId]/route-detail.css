@@ -141,11 +141,12 @@
   background: rgba(7,9,12,0.7); backdrop-filter: blur(6px); color: var(--color-chalk-50); }
 .rd-overlay-views { left: 14px; pointer-events: none; display: inline-flex; align-items: center; gap: 7px;
   padding: 5px 10px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12px;
-  letter-spacing: 0.04em; }
-.rd-overlay-del { right: 14px; pointer-events: auto; cursor: pointer; border: none; display: flex;
+  letter-spacing: 0.04em; color: var(--color-plywood-400); }
+.rd-overlay-del { right: 14px; pointer-events: auto; cursor: pointer; display: flex;
   align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%;
-  transition: color var(--dur-fast); }
-.rd-overlay-del:hover { color: var(--color-hold-red); }
+  background: rgba(7,9,12,0.55); border: 1px solid var(--hairline-soft);
+  transition: background var(--dur-fast), border-color var(--dur-fast); }
+.rd-overlay-del:hover { background: var(--color-hold-red); border-color: transparent; }
 .rd-overlay-views svg, .rd-overlay-del svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
   stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 

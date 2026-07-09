@@ -404,7 +404,9 @@
   .gd-search input { width: 100%; }
   .gd-filters-btn { display: inline-flex; flex: none; }
 
-  .gd-stats { flex-wrap: wrap; gap: 18px 0; }
+  .gd-stats { flex-wrap: nowrap; gap: 0; }
+  .gd-stat { padding-right: 16px; margin-right: 16px; }
+  .gd-stat-num { font-size: 22px; }
   .gd-crow-r { gap: 12px; }
 
   /* hide route type + set-date; collapse separators so only the wall name remains */

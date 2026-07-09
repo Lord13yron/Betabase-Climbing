@@ -21,17 +21,20 @@
   padding: clamp(28px, 5cqw, 52px) clamp(18px, 4cqw, 40px) clamp(64px, 9cqw, 104px); }
 
 /* ---------------- identity hero (matches /profile .pf-chero) ---------------- */
-.u-chero { display: grid; align-items: center; column-gap: 20px; padding: clamp(28px, 5cqw, 44px) 0 0;
+.u-chero { display: grid; align-items: center; column-gap: 20px; row-gap: 18px;
+  padding: clamp(28px, 5cqw, 44px) 0 0;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "avatar eyebrow actions"
-    "avatar name    actions"
-    "avatar handle  actions"; }
+    "eyebrow eyebrow actions"
+    "avatar  name    name"
+    "handle  handle  handle"; }
 .u-chero > .u-mono, .u-chero > .u-photo { grid-area: avatar; }
 .u-chero > .u-eyebrow { grid-area: eyebrow; }
-.u-chero > .u-name { grid-area: name; }
-.u-chero > .u-handle-row { grid-area: handle; margin-top: 10px; }
-.u-chero-actions { grid-area: actions; display: flex; gap: 10px; }
+.u-chero > .u-name { grid-area: name; margin-top: 0; }
+.u-chero > .u-handle-row { grid-area: handle; }
+.u-chero-actions { grid-area: actions; display: flex; gap: 10px; justify-self: end; }
+.u-chero-actions .u-btn { height: 36px; padding: 0 14px; font-size: 13.5px; gap: 7px; }
+.u-chero-actions .u-btn svg { width: 16px; height: 16px; }
 
 .u-mono {
   --sz: 84px;
@@ -224,19 +227,11 @@
   .u-stat .n, .u-grade .n { font-size: 26px; }
 }
 @container u (max-width: 600px) {
-  /* hero: eyebrow on top, avatar beside name, handle + button full-width below */
-  .u-chero { grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas:
-      "eyebrow eyebrow"
-      "avatar  name"
-      "handle  handle"
-      "actions actions";
-    column-gap: 16px; row-gap: 12px; }
+  /* hero: same centered layout, tighter gaps + smaller avatar/name */
+  .u-chero { column-gap: 14px; row-gap: 14px; }
   .u-chero > .u-mono, .u-chero > .u-photo { width: 64px; height: 64px; --sz: 64px; }
   .u-chero > .u-mono { font-size: 26px; }
-  .u-name { font-size: 36px; margin-top: 0; }
-  .u-chero > .u-handle-row { margin-top: 0; }
-  .u-chero-actions .u-btn { width: 100%; justify-content: center; }
+  .u-name { font-size: 36px; }
   .u-grid { grid-template-columns: 1fr; }
 }
 @container u (max-width: 420px) {
