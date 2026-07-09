@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/avatar';
+import type { Comment } from '@/lib/comments';
 import { formatHeight } from '@/lib/height';
 import { incrementVideoView, type BetaVideo } from '@/lib/route-detail';
 import { colors, fonts, radii, space } from '@/lib/theme';
@@ -28,11 +29,21 @@ function relativeTime(iso: string): string {
   return `${Math.floor(d / 7)}w`;
 }
 
-// Beta theater ported from the web RouteTheater, S6 scope only: featured
-// player + horizontal clip playlist, uploader attribution, view counts.
-// Comments (S7), upload (S8), and delete (S10) come later. The screen opens
-// on the newest clip's poster; selecting a playlist clip swaps and autoplays.
-export function RouteTheater({ videos }: { videos: BetaVideo[] }) {
+// Beta theater ported from the web RouteTheater: featured player + horizontal
+// clip playlist, uploader attribution, view + comment counts. Where the web
+// expands an inline thread, the count button hands off to the route screen's
+// comments sheet via onOpenComments. Upload (S8) and delete (S10) come later.
+// The screen opens on the newest clip's poster; selecting a playlist clip
+// swaps and autoplays.
+export function RouteTheater({
+  videos,
+  commentsByVideo,
+  onOpenComments,
+}: {
+  videos: BetaVideo[];
+  commentsByVideo: Record<string, Comment[]>;
+  onOpenComments: (videoId: string) => void;
+}) {
   const [activeId, setActiveId] = useState<string | null>(videos[0]?.id ?? null);
   // One RPC call per clip per screen visit (web semantics); the local +1
   // shows the viewer's own play this session, and doubles as "this clip has
@@ -144,6 +155,16 @@ export function RouteTheater({ videos }: { videos: BetaVideo[] }) {
               <Text style={styles.captionText}>&ldquo;{active.caption}&rdquo;</Text>
             ) : null}
           </View>
+          <Pressable
+            onPress={() => onOpenComments(active.id)}
+            accessibilityLabel="Open comments"
+            hitSlop={space(1.5)}
+            style={({ pressed }) => [styles.commentBtn, pressed && styles.commentBtnPressed]}>
+            <Ionicons name="chatbubble-outline" size={15} color={colors.fgMuted} />
+            <Text style={styles.commentBtnText}>
+              {(commentsByVideo[active.id] ?? []).length}
+            </Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -189,6 +210,12 @@ export function RouteTheater({ videos }: { videos: BetaVideo[] }) {
                     <Ionicons name="eye-outline" size={11} color={colors.fgFaint} />
                     <Text style={styles.clipMetaText}>
                       {v.view_count + (viewBumps[v.id] ?? 0)}
+                    </Text>
+                  </View>
+                  <View style={styles.clipViews}>
+                    <Ionicons name="chatbubble-outline" size={11} color={colors.fgFaint} />
+                    <Text style={styles.clipMetaText}>
+                      {(commentsByVideo[v.id] ?? []).length}
                     </Text>
                   </View>
                 </View>
@@ -292,6 +319,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.chalk200,
+  },
+  commentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: space(1),
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+    paddingHorizontal: space(2.5),
+    paddingVertical: space(1.5),
+  },
+  commentBtnPressed: {
+    opacity: 0.7,
+  },
+  commentBtnText: {
+    fontFamily: fonts.uiMedium,
+    fontSize: 12,
+    color: colors.fgMuted,
   },
   clips: {
     gap: space(2.5),

@@ -12,7 +12,7 @@
 - [x] **S4** — Gyms directory
 - [x] **S5** — Gym detail + route browser
 - [x] **S6** — Route detail: playback, sends, favorites
-- [ ] **S7** — Comments
+- [x] **S7** — Comments
 - [ ] **S8** — Beta upload
 - [ ] **S9** — Community feed + user search
 - [ ] **S10** — Profiles

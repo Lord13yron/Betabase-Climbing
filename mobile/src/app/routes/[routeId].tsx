@@ -1,12 +1,19 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CommentsSheet } from '@/components/routes/comments-sheet';
 import { RouteActions } from '@/components/routes/route-actions';
 import { RouteTheater } from '@/components/routes/route-theater';
 import { SendersStrip } from '@/components/routes/senders-strip';
+import {
+  fetchRouteComments,
+  fetchVideoComments,
+  type CommentTarget,
+} from '@/lib/comments';
 import type { Discipline } from '@/lib/grades';
 import { holdColor, holdInk } from '@/lib/holds';
 import {
@@ -24,9 +31,9 @@ const DISCIPLINE_LABEL: Record<Discipline, string> = {
   lead: 'Lead',
 };
 
-// Route detail ported from the web app/routes/[routeId]/page.tsx, S6 scope:
-// header + send/favorite actions, senders strip, beta theater. Comments (S7)
-// and upload entry (S8) come later.
+// Route detail ported from the web app/routes/[routeId]/page.tsx: header +
+// send/favorite actions, senders strip, beta theater, comments. Upload entry
+// (S8) comes later.
 export default function RouteScreen() {
   const { routeId } = useLocalSearchParams<{ routeId: string }>();
   const router = useRouter();
@@ -50,6 +57,20 @@ export default function RouteScreen() {
     queryFn: () => fetchMyRouteState(userId!, routeId),
     enabled: !!userId,
   });
+  // Comments are secondary content: they don't gate the screen's loading or
+  // error states, and the sheet just shows an empty thread until they land.
+  const routeCommentsQuery = useQuery({
+    queryKey: ['route-comments', routeId],
+    queryFn: () => fetchRouteComments(routeId),
+  });
+  const videoIds = videosQuery.data?.map((v) => v.id);
+  const videoCommentsQuery = useQuery({
+    queryKey: ['route-video-comments', routeId],
+    queryFn: () => fetchVideoComments(videoIds!),
+    enabled: !!videoIds,
+  });
+
+  const [sheetTarget, setSheetTarget] = useState<CommentTarget | null>(null);
 
   const route = routeQuery.data;
 
@@ -95,6 +116,13 @@ export default function RouteScreen() {
       })
     : null;
   const { senders, totalSends } = sendersQuery.data ?? { senders: [], totalSends: 0 };
+  const routeComments = routeCommentsQuery.data ?? [];
+  const commentsByVideo = videoCommentsQuery.data ?? {};
+  const sheetComments = !sheetTarget
+    ? []
+    : 'routeId' in sheetTarget
+      ? routeComments
+      : (commentsByVideo[sheetTarget.videoId] ?? []);
 
   return (
     <SafeAreaView style={styles.page} edges={['top']}>
@@ -142,8 +170,30 @@ export default function RouteScreen() {
 
         <View style={styles.rule} />
 
-        <RouteTheater videos={videosQuery.data ?? []} />
+        <RouteTheater
+          videos={videosQuery.data ?? []}
+          commentsByVideo={commentsByVideo}
+          onOpenComments={(videoId) => setSheetTarget({ videoId })}
+        />
+
+        <Pressable
+          onPress={() => setSheetTarget({ routeId: route.id })}
+          style={({ pressed }) => [styles.discussionRow, pressed && styles.pressed]}>
+          <Ionicons name="chatbubble-outline" size={18} color={colors.accent} />
+          <Text style={styles.discussionTitle}>Discussion</Text>
+          <Text style={styles.discussionCount}>
+            {routeComments.length} {routeComments.length === 1 ? 'comment' : 'comments'}
+          </Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.fgFaint} />
+        </Pressable>
       </ScrollView>
+
+      <CommentsSheet
+        target={sheetTarget}
+        routeId={route.id}
+        comments={sheetComments}
+        onClose={() => setSheetTarget(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -231,6 +281,32 @@ const styles = StyleSheet.create({
   rule: {
     height: 1,
     backgroundColor: colors.hairlineSoft,
+  },
+  discussionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space(2.5),
+    borderWidth: 1,
+    borderColor: colors.hairlineSoft,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    paddingHorizontal: space(4),
+    paddingVertical: space(3.5),
+  },
+  discussionTitle: {
+    fontFamily: fonts.uiSemi,
+    fontSize: 14,
+    color: colors.chalk50,
+  },
+  discussionCount: {
+    flex: 1,
+    fontFamily: fonts.ui,
+    fontSize: 12,
+    color: colors.fgFaint,
+    textAlign: 'right',
+  },
+  pressed: {
+    opacity: 0.7,
   },
   errorTitle: {
     fontFamily: fonts.uiSemi,
