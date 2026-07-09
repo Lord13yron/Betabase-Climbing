@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "design_handoff_landing", "design_handoff_route_detail", "design_handoff_profile"]
+  "exclude": ["node_modules", "mobile", "design_handoff_landing", "design_handoff_route_detail", "design_handoff_profile"]
 }

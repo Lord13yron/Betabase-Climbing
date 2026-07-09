@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getMux } from '@/lib/mux'
 
@@ -8,8 +9,22 @@ export const runtime = 'nodejs'
 // Authed: creates a Mux direct upload and a pending videos row, returns the
 // upload URL for <MuxUploader> to push the file straight to Mux. The webhook
 // fills in asset/playback ids and flips status to ready later.
+//
+// Two auth paths: browser requests carry the session cookie; the mobile app
+// has no cookies and sends `Authorization: Bearer <access_token>` instead.
+// Either way all queries below run as the resolved user under RLS.
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  const authHeader = request.headers.get('authorization')
+  const supabase = authHeader?.startsWith('Bearer ')
+    ? createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: { headers: { Authorization: authHeader } },
+          auth: { persistSession: false, autoRefreshToken: false },
+        }
+      )
+    : await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
