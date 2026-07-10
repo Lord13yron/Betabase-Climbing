@@ -102,6 +102,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="gyms/[gymId]" />
         <Stack.Screen name="routes/[routeId]" />
+        <Stack.Screen name="u/[username]" />
       </Stack.Protected>
     </Stack>
   );

@@ -14,7 +14,7 @@
 - [x] **S6** — Route detail: playback, sends, favorites
 - [x] **S7** — Comments
 - [x] **S8** — Beta upload
-- [ ] **S9** — Community feed + user search
+- [x] **S9** — Community feed + user search
 - [ ] **S10** — Profiles
 - [ ] **S11** — Polish pass
 - [ ] **S12** — Release builds (deferred-OK)
