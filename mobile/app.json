@@ -38,7 +38,15 @@
           "imageWidth": 76
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Betabase uses your photo library so you can share beta videos you have already filmed.",
+          "cameraPermission": "Betabase uses the camera so you can film beta videos at the gym.",
+          "microphonePermission": "Betabase records audio with your beta videos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

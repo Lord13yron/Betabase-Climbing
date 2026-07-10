@@ -13,7 +13,7 @@
 - [x] **S5** — Gym detail + route browser
 - [x] **S6** — Route detail: playback, sends, favorites
 - [x] **S7** — Comments
-- [ ] **S8** — Beta upload
+- [x] **S8** — Beta upload
 - [ ] **S9** — Community feed + user search
 - [ ] **S10** — Profiles
 - [ ] **S11** — Polish pass

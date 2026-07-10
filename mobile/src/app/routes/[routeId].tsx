@@ -166,6 +166,26 @@ export default function RouteScreen() {
           favorited={myStateQuery.data?.favorited ?? false}
         />
 
+        {/* S8 entry: open the Upload tab with this route pre-selected. */}
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/(tabs)/upload',
+              params: {
+                routeId: route.id,
+                routeName: route.name,
+                gradeLabel: route.grade_label,
+                color: route.color ?? '',
+                gymId: route.gym_id,
+                gymName: route.gyms?.name ?? '',
+              },
+            })
+          }
+          style={({ pressed }) => [styles.addBetaBtn, pressed && styles.pressed]}>
+          <Ionicons name="videocam-outline" size={18} color={colors.accent} />
+          <Text style={styles.addBetaLabel}>Add beta video</Text>
+        </Pressable>
+
         <SendersStrip senders={senders} totalSends={totalSends} />
 
         <View style={styles.rule} />
@@ -281,6 +301,22 @@ const styles = StyleSheet.create({
   rule: {
     height: 1,
     backgroundColor: colors.hairlineSoft,
+  },
+  addBetaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space(2),
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  addBetaLabel: {
+    fontFamily: fonts.uiSemi,
+    fontSize: 14,
+    color: colors.fg,
   },
   discussionRow: {
     flexDirection: 'row',
