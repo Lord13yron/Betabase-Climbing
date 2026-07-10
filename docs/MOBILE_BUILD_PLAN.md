@@ -15,7 +15,7 @@
 - [x] **S7** — Comments
 - [x] **S8** — Beta upload
 - [x] **S9** — Community feed + user search
-- [ ] **S10** — Profiles
+- [x] **S10** — Profiles
 - [ ] **S11** — Polish pass
 - [ ] **S12** — Release builds (deferred-OK)
 
