@@ -42,7 +42,7 @@ Key architectural difference from the website: there are no server components or
 | Video playback | `expo-video` against Mux HLS: `https://stream.mux.com/{playbackId}.m3u8`. Thumbnails via `https://image.mux.com/{playbackId}/thumbnail.webp?...` rendered with `expo-image`. |
 | Video upload | `expo-image-picker` (record or pick, MP4/MOV, ≤500MB) → `POST {API_BASE}/api/mux/upload` with a Supabase Bearer token → direct upload to the returned Mux URL. |
 | Platforms | iOS + Android via Expo/EAS. Store submission deferred to S12. |
-| Website changes | Exactly one: `app/api/mux/upload/route.ts` must also authenticate via `Authorization: Bearer <access_token>` (mobile has no cookies), then redeploy. Done inside S8. |
+| Website changes | Two: `app/api/mux/upload/route.ts` must also authenticate via `Authorization: Bearer <access_token>` (mobile has no cookies), done inside S8; and `app/api/videos/[videoId]/route.ts` (Bearer-auth DELETE that removes the Mux asset + row), added in S10 because deleting only the DB row from the app would orphan the Mux asset. Each deployed before its section's app work. |
 
 ## Ground rules for the executing agent
 
@@ -169,6 +169,8 @@ Community tab (reference: `app/community/page.tsx`, `app/community/feed.ts`, `Us
 ### S10 — Profiles
 
 Profile tab + public profiles (reference: `app/profile/` incl. `ProfileEdit.tsx`, `MyVideosGrid.tsx`, `card-utils.ts`; `app/u/[username]/page.tsx`, `HeightDisplay.tsx`).
+
+**Website side (second web change, see Decisions):** `app/api/videos/[videoId]/route.ts`, a Bearer-auth `DELETE` mirroring `deleteVideoAction` (Mux asset + row, uploader-only). Deploy before the app work.
 
 - Own profile: avatar upload to the `avatars` Storage bucket (per-user folder path, `expo-image-picker` for the photo), username display, height edit (cm stored, ft/in toggle via copied `height.ts`), max boulder (V) and max route (YDS) grade pickers from `grades.ts`, my-videos grid with Mux thumbnails and delete-own-video.
 - Public profile screen at `mobile/app/u/[username]`: avatar, stats, public videos — reached from feed items, comments, senders strip, and user search.
