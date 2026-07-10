@@ -1,5 +1,4 @@
 import { Hero } from "@/components/landing/Hero";
-import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Features } from "@/components/landing/Features";
 import { FeaturedGyms } from "@/components/landing/FeaturedGyms";
 import { CTABand } from "@/components/landing/CTABand";
@@ -10,7 +9,7 @@ export default function Home() {
   return (
     <main className="bb-landing">
       <Hero />
-      {/* <HowItWorks /> */}
+
       <Features />
       <FeaturedGyms />
       <CTABand />
