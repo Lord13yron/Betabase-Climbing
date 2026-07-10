@@ -103,6 +103,7 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="gyms/[gymId]" />
         <Stack.Screen name="routes/[routeId]" />
         <Stack.Screen name="u/[username]" />
+        <Stack.Screen name="edit-profile" options={{ presentation: 'modal' }} />
       </Stack.Protected>
     </Stack>
   );
