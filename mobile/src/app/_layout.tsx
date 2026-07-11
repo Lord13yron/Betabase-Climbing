@@ -27,7 +27,16 @@ import { colors } from '@/lib/theme';
 SplashScreen.preventAutoHideAsync();
 
 // One client for the whole app; screens fetch Supabase data with useQuery.
-const queryClient = new QueryClient();
+// retry: 1 so offline failures surface after one retry instead of three;
+// staleTime keeps tab switches from refetching everything on every focus.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30_000,
+    },
+  },
+});
 
 // Navigation surfaces (headers, screen backgrounds, tab bar fallbacks)
 // themed to the brand palette.

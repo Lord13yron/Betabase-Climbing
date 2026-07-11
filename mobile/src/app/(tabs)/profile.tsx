@@ -1,11 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { StatBand } from '@/components/profile/stat-band';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { VideoCard } from '@/components/profile/video-card';
 import { formatHeight } from '@/lib/height';
 import {
@@ -66,18 +67,18 @@ export default function ProfileScreen() {
 
   if (profileQuery.isPending || videosQuery.isPending || sendsQuery.isPending) {
     return (
-      <View style={[styles.page, styles.center]}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={styles.page}>
+        <LoadingState />
       </View>
     );
   }
   if (profileQuery.isError || !profileQuery.data) {
     return (
-      <View style={[styles.page, styles.center]}>
-        <Text style={styles.emptyTitle}>Couldn't load your profile</Text>
-        <Pressable onPress={() => profileQuery.refetch()} style={styles.retry}>
-          <Text style={styles.retryLabel}>Retry</Text>
-        </Pressable>
+      <View style={styles.page}>
+        <ErrorState
+          title="Couldn't load your profile"
+          onRetry={() => profileQuery.refetch()}
+        />
       </View>
     );
   }
@@ -92,7 +93,21 @@ export default function ProfileScreen() {
   return (
     <View style={styles.page}>
       <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              tintColor={colors.accent}
+              refreshing={profileQuery.isRefetching}
+              onRefresh={() => {
+                profileQuery.refetch();
+                videosQuery.refetch();
+                sendsQuery.refetch();
+                favCountQuery.refetch();
+              }}
+            />
+          }>
           {/* hero */}
           <View style={styles.hero}>
             <Avatar src={profile.avatar_url} name={profile.username} size={88} />
@@ -179,11 +194,6 @@ const styles = StyleSheet.create({
   },
   safe: {
     flex: 1,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space(3),
   },
   content: {
     paddingHorizontal: space(5),
@@ -286,18 +296,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.fgMuted,
     textAlign: 'center',
-  },
-  retry: {
-    borderWidth: 1,
-    borderColor: colors.hairline,
-    borderRadius: radii.md,
-    paddingHorizontal: space(5),
-    paddingVertical: space(2.5),
-  },
-  retryLabel: {
-    fontFamily: fonts.uiSemi,
-    fontSize: 14,
-    color: colors.fg,
   },
   signOut: {
     marginTop: space(3),

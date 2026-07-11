@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -14,9 +13,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
+import { Sheet, SheetTitle } from '@/components/ui/sheet';
 import { gradesForDiscipline } from '@/lib/grades';
 import { cmToFtIn, ftInToCm, type HeightUnit } from '@/lib/height';
 import { fetchOwnProfile, getHeightUnit, setHeightUnit, updateProfile, uploadAvatar } from '@/lib/profile';
@@ -331,35 +331,30 @@ function GradePickerSheet({
   onSelect: (grade: string | null) => void;
   onClose: () => void;
 }) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close grade picker" />
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + space(4) }]}>
-        <Text style={styles.sheetTitle}>{title}</Text>
-        <ScrollView style={styles.sheetList} showsVerticalScrollIndicator={false}>
-          {[null, ...grades].map((g) => {
-            const isSelected = g === selected;
-            return (
-              <Pressable
-                key={g ?? 'not-set'}
-                onPress={() => {
-                  onSelect(g);
-                  onClose();
-                }}
-                accessibilityState={{ selected: isSelected }}
-                style={({ pressed }) => [styles.sheetItem, pressed && styles.sheetItemPressed]}>
-                <Text style={[styles.sheetItemLabel, isSelected && styles.sheetItemLabelSelected]}>
-                  {g ?? 'Not set'}
-                </Text>
-                {isSelected && <Ionicons name="checkmark" size={18} color={colors.accent} />}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-    </Modal>
+    <Sheet visible={visible} onClose={onClose} closeLabel="Close grade picker" sheetStyle={styles.sheet}>
+      <SheetTitle style={styles.sheetTitle}>{title}</SheetTitle>
+      <ScrollView style={styles.sheetList} showsVerticalScrollIndicator={false}>
+        {[null, ...grades].map((g) => {
+          const isSelected = g === selected;
+          return (
+            <Pressable
+              key={g ?? 'not-set'}
+              onPress={() => {
+                onSelect(g);
+                onClose();
+              }}
+              accessibilityState={{ selected: isSelected }}
+              style={({ pressed }) => [styles.sheetItem, pressed && styles.sheetItemPressed]}>
+              <Text style={[styles.sheetItemLabel, isSelected && styles.sheetItemLabelSelected]}>
+                {g ?? 'Not set'}
+              </Text>
+              {isSelected && <Ionicons name="checkmark" size={18} color={colors.accent} />}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </Sheet>
   );
 }
 
@@ -530,7 +525,7 @@ const styles = StyleSheet.create({
   error: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: '#e5743a',
+    color: colors.errorText,
   },
   saveBtn: {
     flexDirection: 'row',
@@ -552,26 +547,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.onAccent,
   },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-  },
   sheet: {
-    backgroundColor: colors.bgDeep,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.hairlineSoft,
     paddingHorizontal: space(5),
-    paddingTop: space(5),
     gap: space(1),
   },
   sheetTitle: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: colors.fgMuted,
     marginBottom: space(2),
   },
   sheetList: {

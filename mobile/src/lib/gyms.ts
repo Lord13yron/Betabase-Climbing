@@ -101,7 +101,7 @@ export async function fetchGymDirectory(query: string): Promise<GymCardData[]> {
       routesCount: g.route_count,
       beta: g.beta_count,
       disciplines,
-      typesLabel: disciplines.map((d) => DISCIPLINE_LABEL[d]).join(' · ') || '—',
+      typesLabel: disciplines.map((d) => DISCIPLINE_LABEL[d]).join(' · ') || 'No routes yet',
       setLabel: relativeSetLabel(g.latest_set_date),
       setSort: g.latest_set_date ? new Date(`${g.latest_set_date}T00:00:00`).getTime() : 0,
     };

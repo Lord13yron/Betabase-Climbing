@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { toggleFavoriteGym, type GymCardData } from '@/lib/gyms';
 import { useSession } from '@/lib/session';
@@ -63,6 +63,7 @@ function FavoriteHeart({ gymId, favorited }: { gymId: string; favorited: boolean
 
   const toggle = useMutation({
     mutationFn: () => toggleFavoriteGym(userId!, gymId),
+    onError: () => Alert.alert('Could not update favorite', 'Check your connection and try again.'),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['favorite-gym-ids'] }),
   });
 

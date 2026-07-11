@@ -4,9 +4,10 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RouteFilterSheet, ROUTE_SORTS, type RouteSort } from '@/components/gyms/route-filter-sheet';
 import { RouteRow } from '@/components/gyms/route-row';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { type Discipline, gradesForDiscipline } from '@/lib/grades';
 import {
   fetchGym,
@@ -91,6 +93,7 @@ export default function GymScreen() {
 
   const toggleGymFav = useMutation({
     mutationFn: () => toggleFavoriteGym(userId!, gymId),
+    onError: () => Alert.alert('Could not update favorite', 'Check your connection and try again.'),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['favorite-gym-ids'] }),
   });
 
@@ -226,31 +229,26 @@ export default function GymScreen() {
 
   if (gymQuery.isPending || routesQuery.isPending || wallsQuery.isPending) {
     return (
-      <View style={[styles.page, styles.center]}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={styles.page}>
+        <LoadingState />
       </View>
     );
   }
 
   if (gymQuery.isError || routesQuery.isError || wallsQuery.isError || !gym) {
     return (
-      <View style={[styles.page, styles.center, { paddingTop: insets.top }]}>
-        <Text style={styles.emptyTitle}>Something went wrong</Text>
-        <Text style={styles.emptyText}>We could not load this gym.</Text>
-        <View style={styles.errorBtns}>
-          <Pressable
-            style={styles.outlineBtn}
-            onPress={() => {
-              gymQuery.refetch();
-              routesQuery.refetch();
-              wallsQuery.refetch();
-            }}>
-            <Text style={styles.outlineBtnLabel}>Try again</Text>
-          </Pressable>
+      <View style={[styles.page, { paddingTop: insets.top }]}>
+        <ErrorState
+          message="We could not load this gym. Check your connection and try again."
+          onRetry={() => {
+            gymQuery.refetch();
+            routesQuery.refetch();
+            wallsQuery.refetch();
+          }}>
           <Pressable style={styles.outlineBtn} onPress={() => router.back()}>
             <Text style={styles.outlineBtnLabel}>Back to gyms</Text>
           </Pressable>
-        </View>
+        </ErrorState>
       </View>
     );
   }
@@ -423,6 +421,19 @@ export default function GymScreen() {
         contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space(8) }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        refreshControl={
+          <RefreshControl
+            tintColor={colors.accent}
+            refreshing={routesQuery.isRefetching}
+            onRefresh={() => {
+              gymQuery.refetch();
+              routesQuery.refetch();
+              wallsQuery.refetch();
+              favGymsQuery.refetch();
+              favRoutesQuery.refetch();
+            }}
+          />
+        }
       />
 
       <RouteFilterSheet
@@ -452,12 +463,6 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: colors.bg,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space(8),
-    gap: space(2.5),
   },
   hero: {
     height: 300,
@@ -674,11 +679,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: colors.fgFaint,
-  },
-  errorBtns: {
-    flexDirection: 'row',
-    gap: space(3),
-    marginTop: space(1),
   },
   outlineBtn: {
     marginTop: space(1),

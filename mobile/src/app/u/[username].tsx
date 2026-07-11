@@ -1,11 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { StatBand } from '@/components/profile/stat-band';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { VideoCard } from '@/components/profile/video-card';
 import { timeAgo } from '@/lib/feed';
 import { formatHeight } from '@/lib/height';
@@ -62,10 +63,17 @@ export default function PublicProfileScreen() {
       </View>
 
       {profileQuery.isPending || (profile && (videosQuery.isPending || sendsQuery.isPending)) ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
-      ) : profileQuery.isError || !profile ? (
+        <LoadingState />
+      ) : profileQuery.isError || videosQuery.isError || sendsQuery.isError ? (
+        <ErrorState
+          message="We could not load this profile. Check your connection and try again."
+          onRetry={() => {
+            profileQuery.refetch();
+            videosQuery.refetch();
+            sendsQuery.refetch();
+          }}
+        />
+      ) : !profile ? (
         <View style={styles.center}>
           <Ionicons name="person-outline" size={28} color={colors.fgFaint} />
           <Text style={styles.emptyTitle}>Climber not found</Text>
@@ -79,6 +87,12 @@ export default function PublicProfileScreen() {
           sends={sendsQuery.data ?? []}
           unit={unitQuery.data ?? 'cm'}
           isSelf={isSelf}
+          refreshing={profileQuery.isRefetching}
+          onRefresh={() => {
+            profileQuery.refetch();
+            videosQuery.refetch();
+            sendsQuery.refetch();
+          }}
         />
       )}
     </SafeAreaView>
@@ -92,6 +106,8 @@ function PublicProfileBody({
   sends,
   unit,
   isSelf,
+  refreshing,
+  onRefresh,
 }: {
   profile: NonNullable<Awaited<ReturnType<typeof fetchPublicProfile>>>;
   videos: Awaited<ReturnType<typeof fetchProfileVideos>>['videos'];
@@ -99,13 +115,20 @@ function PublicProfileBody({
   sends: Awaited<ReturnType<typeof fetchSends>>;
   unit: 'cm' | 'ftin';
   isSelf: boolean;
+  refreshing: boolean;
+  onRefresh: () => void;
 }) {
   const router = useRouter();
   const stats = sendStats(sends);
   const since = new Date(profile.created_at).getFullYear();
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl tintColor={colors.accent} refreshing={refreshing} onRefresh={onRefresh} />
+      }>
       {/* hero */}
       <View style={styles.hero}>
         <Avatar src={profile.avatar_url} name={profile.username} size={88} />

@@ -2,8 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   SectionList,
   StyleSheet,
@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GymCard } from '@/components/gyms/gym-card';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { SortSheet, SORTS, type SortKey } from '@/components/gyms/sort-sheet';
 import type { Discipline } from '@/lib/grades';
 import { fetchFavoriteGymIds, fetchGymDirectory, type GymCardData } from '@/lib/gyms';
@@ -144,17 +145,12 @@ export default function GymsScreen() {
       </View>
 
       {gymsQuery.isPending ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
+        <LoadingState />
       ) : gymsQuery.isError ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyTitle}>Something went wrong</Text>
-          <Text style={styles.emptyText}>We could not load the gym directory.</Text>
-          <Pressable style={styles.clearBtn} onPress={() => gymsQuery.refetch()}>
-            <Text style={styles.clearBtnLabel}>Try again</Text>
-          </Pressable>
-        </View>
+        <ErrorState
+          message="We could not load the gym directory. Check your connection and try again."
+          onRetry={() => gymsQuery.refetch()}
+        />
       ) : filtered.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="search-outline" size={28} color={colors.fgFaint} />
@@ -187,6 +183,16 @@ export default function GymsScreen() {
           stickySectionHeadersEnabled={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          refreshControl={
+            <RefreshControl
+              tintColor={colors.accent}
+              refreshing={gymsQuery.isRefetching}
+              onRefresh={() => {
+                gymsQuery.refetch();
+                favoritesQuery.refetch();
+              }}
+            />
+          }
         />
       )}
 

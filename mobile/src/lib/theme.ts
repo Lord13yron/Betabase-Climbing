@@ -39,6 +39,8 @@ export const colors = {
   accent: '#c79f65', // plywood500
   accentHover: '#a47e48', // plywood600
   onAccent: '#1a1206', // dark ink for text on gold
+  error: '#d6453b', // strong red for icons/destructive accents
+  errorText: '#e6a49d', // soft salmon, readable error copy on dark surfaces
 } as const;
 
 // Font family names as registered by expo-font (one family per weight; RN

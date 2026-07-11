@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,10 +28,6 @@ import {
   MAX_UPLOAD_BYTES,
   uploadToMux,
 } from '@/lib/upload';
-
-// Error red from the auth screens' error box (no theme token yet).
-const ERROR_RED = '#c55046';
-const ERROR_TEXT = '#e6a49d';
 
 type Clip = {
   uri: string;
@@ -195,167 +193,171 @@ export default function UploadScreen() {
           <RoutePicker onPick={setRoute} />
         </View>
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag">
-          {/* selected route summary */}
-          <View style={styles.routeCard}>
-            <View style={[styles.band, { backgroundColor: holdColor(route.color) }]}>
-              <Text style={[styles.bandLabel, { color: holdInk(route.color) }]}>
-                {route.gradeLabel}
-              </Text>
-            </View>
-            <View style={styles.routeMain}>
-              <Text style={styles.routeName} numberOfLines={1}>
-                {route.name}
-              </Text>
-              {route.gymName ? (
-                <Text style={styles.routeMeta} numberOfLines={1}>
-                  {route.gymName}
+        <KeyboardAvoidingView
+          style={styles.grow}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag">
+            {/* selected route summary */}
+            <View style={styles.routeCard}>
+              <View style={[styles.band, { backgroundColor: holdColor(route.color) }]}>
+                <Text style={[styles.bandLabel, { color: holdInk(route.color) }]}>
+                  {route.gradeLabel}
                 </Text>
+              </View>
+              <View style={styles.routeMain}>
+                <Text style={styles.routeName} numberOfLines={1}>
+                  {route.name}
+                </Text>
+                {route.gymName ? (
+                  <Text style={styles.routeMeta} numberOfLines={1}>
+                    {route.gymName}
+                  </Text>
+                ) : null}
+              </View>
+              {!busy && phase !== 'ready' ? (
+                <Pressable
+                  onPress={() => {
+                    setRoute(null);
+                    resetForAnother();
+                  }}
+                  hitSlop={space(2)}
+                  style={({ pressed }) => pressed && styles.pressed}>
+                  <Text style={styles.changeLabel}>Change</Text>
+                </Pressable>
               ) : null}
             </View>
-            {!busy && phase !== 'ready' ? (
-              <Pressable
-                onPress={() => {
-                  setRoute(null);
-                  resetForAnother();
-                }}
-                hitSlop={space(2)}
-                style={({ pressed }) => pressed && styles.pressed}>
-                <Text style={styles.changeLabel}>Change</Text>
-              </Pressable>
-            ) : null}
-          </View>
 
-          {phase === 'ready' ? (
-            <View style={styles.stateCard}>
-              <Ionicons name="checkmark-circle" size={40} color={colors.accent} />
-              <Text style={styles.stateTitle}>Beta is live</Text>
-              <Text style={styles.stateText}>
-                Your clip is processed and playing on the route page.
-              </Text>
-              <View style={styles.stateBtns}>
-                <Pressable
-                  style={({ pressed }) => [styles.primaryBtn, pressed && styles.pressed]}
-                  onPress={() => router.push(`/routes/${route.id}`)}>
-                  <Text style={styles.primaryLabel}>View route</Text>
-                </Pressable>
+            {phase === 'ready' ? (
+              <View style={styles.stateCard}>
+                <Ionicons name="checkmark-circle" size={40} color={colors.accent} />
+                <Text style={styles.stateTitle}>Beta is live</Text>
+                <Text style={styles.stateText}>
+                  Your clip is processed and playing on the route page.
+                </Text>
+                <View style={styles.stateBtns}>
+                  <Pressable
+                    style={({ pressed }) => [styles.primaryBtn, pressed && styles.pressed]}
+                    onPress={() => router.push(`/routes/${route.id}`)}>
+                    <Text style={styles.primaryLabel}>View route</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [styles.outlineBtn, pressed && styles.pressed]}
+                    onPress={resetForAnother}>
+                    <Text style={styles.outlineLabel}>Upload another</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : phase === 'pending' ? (
+              <View style={styles.stateCard}>
+                <ActivityIndicator color={colors.accent} />
+                <Text style={styles.stateTitle}>Processing your beta</Text>
+                <Text style={styles.stateText}>
+                  The upload is done. Mux is preparing the clip for playback, this usually takes
+                  under a minute.
+                </Text>
+              </View>
+            ) : phase === 'errored' ? (
+              <View style={styles.stateCard}>
+                <Ionicons name="alert-circle" size={40} color={colors.error} />
+                <Text style={styles.stateTitle}>Processing failed</Text>
+                <Text style={styles.stateText}>{error}</Text>
                 <Pressable
                   style={({ pressed }) => [styles.outlineBtn, pressed && styles.pressed]}
                   onPress={resetForAnother}>
-                  <Text style={styles.outlineLabel}>Upload another</Text>
+                  <Text style={styles.outlineLabel}>Start over</Text>
                 </Pressable>
               </View>
-            </View>
-          ) : phase === 'pending' ? (
-            <View style={styles.stateCard}>
-              <ActivityIndicator color={colors.accent} />
-              <Text style={styles.stateTitle}>Processing your beta</Text>
-              <Text style={styles.stateText}>
-                The upload is done. Mux is preparing the clip for playback, this usually takes
-                under a minute.
-              </Text>
-            </View>
-          ) : phase === 'errored' ? (
-            <View style={styles.stateCard}>
-              <Ionicons name="alert-circle" size={40} color={ERROR_RED} />
-              <Text style={styles.stateTitle}>Processing failed</Text>
-              <Text style={styles.stateText}>{error}</Text>
-              <Pressable
-                style={({ pressed }) => [styles.outlineBtn, pressed && styles.pressed]}
-                onPress={resetForAnother}>
-                <Text style={styles.outlineLabel}>Start over</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <>
-              {/* clip source buttons / picked clip card */}
-              {!clip ? (
-                <View style={styles.sourceRow}>
-                  <Pressable
-                    onPress={() => pick('camera')}
-                    style={({ pressed }) => [styles.sourceBtn, pressed && styles.pressed]}>
-                    <Ionicons name="videocam-outline" size={22} color={colors.accent} />
-                    <Text style={styles.sourceLabel}>Film now</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => pick('library')}
-                    style={({ pressed }) => [styles.sourceBtn, pressed && styles.pressed]}>
-                    <Ionicons name="images-outline" size={22} color={colors.accent} />
-                    <Text style={styles.sourceLabel}>Choose from library</Text>
-                  </Pressable>
-                </View>
-              ) : (
-                <View style={styles.clipCard}>
-                  <View style={styles.clipThumb}>
-                    <Ionicons name="film-outline" size={20} color={colors.accent} />
-                    {clip.durationLabel ? (
-                      <Text style={styles.clipDuration}>{clip.durationLabel}</Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.clipMain}>
-                    <Text style={styles.clipTitle}>
-                      {phase === 'uploading'
-                        ? `Uploading  ${Math.round(progress * 100)}%`
-                        : 'Ready to upload'}
-                    </Text>
-                    <Text style={styles.clipMeta}>{clip.sizeMB} MB</Text>
-                    {phase === 'uploading' ? (
-                      <View style={styles.progressTrack}>
-                        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                      </View>
-                    ) : null}
-                  </View>
-                  {phase === 'idle' ? (
+            ) : (
+              <>
+                {/* clip source buttons / picked clip card */}
+                {!clip ? (
+                  <View style={styles.sourceRow}>
                     <Pressable
-                      onPress={() => setClip(null)}
-                      hitSlop={space(2)}
-                      accessibilityLabel="Remove clip"
-                      style={({ pressed }) => pressed && styles.pressed}>
-                      <Ionicons name="close" size={20} color={colors.fgMuted} />
+                      onPress={() => pick('camera')}
+                      style={({ pressed }) => [styles.sourceBtn, pressed && styles.pressed]}>
+                      <Ionicons name="videocam-outline" size={22} color={colors.accent} />
+                      <Text style={styles.sourceLabel}>Film now</Text>
                     </Pressable>
-                  ) : null}
+                    <Pressable
+                      onPress={() => pick('library')}
+                      style={({ pressed }) => [styles.sourceBtn, pressed && styles.pressed]}>
+                      <Ionicons name="images-outline" size={22} color={colors.accent} />
+                      <Text style={styles.sourceLabel}>Choose from library</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={styles.clipCard}>
+                    <View style={styles.clipThumb}>
+                      <Ionicons name="film-outline" size={20} color={colors.accent} />
+                      {clip.durationLabel ? (
+                        <Text style={styles.clipDuration}>{clip.durationLabel}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.clipMain}>
+                      <Text style={styles.clipTitle}>
+                        {phase === 'uploading'
+                          ? `Uploading  ${Math.round(progress * 100)}%`
+                          : 'Ready to upload'}
+                      </Text>
+                      <Text style={styles.clipMeta}>{clip.sizeMB} MB</Text>
+                      {phase === 'uploading' ? (
+                        <View style={styles.progressTrack}>
+                          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                        </View>
+                      ) : null}
+                    </View>
+                    {phase === 'idle' ? (
+                      <Pressable
+                        onPress={() => setClip(null)}
+                        hitSlop={space(2)}
+                        accessibilityLabel="Remove clip"
+                        style={({ pressed }) => pressed && styles.pressed}>
+                        <Ionicons name="close" size={20} color={colors.fgMuted} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                )}
+
+                {/* caption */}
+                <View style={styles.captionBlock}>
+                  <View style={styles.captionHead}>
+                    <Text style={styles.captionLabel}>Caption (optional)</Text>
+                    <Text style={styles.captionCount}>{caption.length}/280</Text>
+                  </View>
+                  <TextInput
+                    style={styles.captionInput}
+                    value={caption}
+                    onChangeText={setCaption}
+                    maxLength={280}
+                    multiline
+                    editable={phase === 'idle'}
+                    placeholder="Call out the crux, the beta, the foot you stand up on"
+                    placeholderTextColor={colors.fgFaint}
+                  />
                 </View>
-              )}
 
-              {/* caption */}
-              <View style={styles.captionBlock}>
-                <View style={styles.captionHead}>
-                  <Text style={styles.captionLabel}>Caption (optional)</Text>
-                  <Text style={styles.captionCount}>{caption.length}/280</Text>
-                </View>
-                <TextInput
-                  style={styles.captionInput}
-                  value={caption}
-                  onChangeText={setCaption}
-                  maxLength={280}
-                  multiline
-                  editable={phase === 'idle'}
-                  placeholder="Call out the crux, the beta, the foot you stand up on"
-                  placeholderTextColor={colors.fgFaint}
-                />
-              </View>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-              <Pressable
-                onPress={startUpload}
-                disabled={!clip || phase === 'uploading'}
-                style={({ pressed }) => [
-                  styles.primaryBtn,
-                  (!clip || phase === 'uploading') && styles.primaryBtnDisabled,
-                  pressed && styles.pressed,
-                ]}>
-                <Ionicons name="cloud-upload-outline" size={18} color={colors.onAccent} />
-                <Text style={styles.primaryLabel}>
-                  {phase === 'uploading' ? 'Uploading' : 'Upload beta'}
-                </Text>
-              </Pressable>
-            </>
-          )}
-        </ScrollView>
+                <Pressable
+                  onPress={startUpload}
+                  disabled={!clip || phase === 'uploading'}
+                  style={({ pressed }) => [
+                    styles.primaryBtn,
+                    (!clip || phase === 'uploading') && styles.primaryBtnDisabled,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Ionicons name="cloud-upload-outline" size={18} color={colors.onAccent} />
+                  <Text style={styles.primaryLabel}>
+                    {phase === 'uploading' ? 'Uploading' : 'Upload beta'}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );
@@ -388,6 +390,9 @@ const styles = StyleSheet.create({
   pickerWrap: {
     flex: 1,
     paddingHorizontal: space(6),
+  },
+  grow: {
+    flex: 1,
   },
   scroll: {
     paddingHorizontal: space(6),
@@ -543,7 +548,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     fontSize: 13,
     lineHeight: 19,
-    color: ERROR_TEXT,
+    color: colors.errorText,
   },
   primaryBtn: {
     flexDirection: 'row',

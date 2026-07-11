@@ -2,10 +2,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CommentsSheet } from '@/components/routes/comments-sheet';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { RouteActions } from '@/components/routes/route-actions';
 import { RouteTheater } from '@/components/routes/route-theater';
 import { SendersStrip } from '@/components/routes/senders-strip';
@@ -76,31 +77,26 @@ export default function RouteScreen() {
 
   if (routeQuery.isPending || videosQuery.isPending || sendersQuery.isPending) {
     return (
-      <View style={[styles.page, styles.center]}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={styles.page}>
+        <LoadingState />
       </View>
     );
   }
 
   if (routeQuery.isError || videosQuery.isError || sendersQuery.isError || !route) {
     return (
-      <View style={[styles.page, styles.center]}>
-        <Text style={styles.errorTitle}>Something went wrong</Text>
-        <Text style={styles.errorText}>We could not load this route.</Text>
-        <View style={styles.errorBtns}>
-          <Pressable
-            style={styles.outlineBtn}
-            onPress={() => {
-              routeQuery.refetch();
-              videosQuery.refetch();
-              sendersQuery.refetch();
-            }}>
-            <Text style={styles.outlineBtnLabel}>Try again</Text>
-          </Pressable>
+      <View style={styles.page}>
+        <ErrorState
+          message="We could not load this route. Check your connection and try again."
+          onRetry={() => {
+            routeQuery.refetch();
+            videosQuery.refetch();
+            sendersQuery.refetch();
+          }}>
           <Pressable style={styles.outlineBtn} onPress={() => router.back()}>
             <Text style={styles.outlineBtnLabel}>Back</Text>
           </Pressable>
-        </View>
+        </ErrorState>
       </View>
     );
   }
@@ -126,7 +122,22 @@ export default function RouteScreen() {
 
   return (
     <SafeAreaView style={styles.page} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            tintColor={colors.accent}
+            refreshing={routeQuery.isRefetching}
+            onRefresh={() => {
+              routeQuery.refetch();
+              videosQuery.refetch();
+              sendersQuery.refetch();
+              myStateQuery.refetch();
+              routeCommentsQuery.refetch();
+              videoCommentsQuery.refetch();
+            }}
+          />
+        }>
         <Pressable
           onPress={() => router.back()}
           hitSlop={space(2)}
@@ -222,12 +233,6 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: colors.bg,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: space(8),
-    gap: space(2.5),
   },
   scroll: {
     paddingHorizontal: space(4),
@@ -343,23 +348,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  errorTitle: {
-    fontFamily: fonts.uiSemi,
-    fontSize: 17,
-    color: colors.chalk50,
-  },
-  errorText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.fgMuted,
-    textAlign: 'center',
-  },
-  errorBtns: {
-    flexDirection: 'row',
-    gap: space(3),
-    marginTop: space(1),
   },
   outlineBtn: {
     borderWidth: 1,

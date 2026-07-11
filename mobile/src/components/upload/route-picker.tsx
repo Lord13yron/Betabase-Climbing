@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { fetchGymRoutes, fetchWalls, type GymRoute } from '@/lib/gym-detail';
 import { fetchGymDirectory } from '@/lib/gyms';
 import { holdColor, holdInk } from '@/lib/holds';
@@ -72,9 +72,12 @@ function GymStep({ onPick }: { onPick: (gymId: string, gymName: string) => void 
         placeholder="Search gyms by name or city"
       />
       {gymsQuery.isPending ? (
-        <Spinner />
+        <LoadingState />
       ) : gymsQuery.isError ? (
-        <ErrorState text="We could not load the gym directory." onRetry={gymsQuery.refetch} />
+        <ErrorState
+          message="We could not load the gym directory. Check your connection and try again."
+          onRetry={() => gymsQuery.refetch()}
+        />
       ) : (
         <FlatList
           data={gymsQuery.data}
@@ -162,9 +165,12 @@ function RouteStep({
         placeholder="Search by name, grade, color, or wall"
       />
       {routesQuery.isPending ? (
-        <Spinner />
+        <LoadingState />
       ) : routesQuery.isError ? (
-        <ErrorState text="We could not load this gym's routes." onRetry={routesQuery.refetch} />
+        <ErrorState
+          message="We could not load this gym's routes. Check your connection and try again."
+          onRetry={() => routesQuery.refetch()}
+        />
       ) : (
         <FlatList
           data={filtered}
@@ -231,25 +237,6 @@ function SearchBox({
         autoCorrect={false}
         returnKeyType="search"
       />
-    </View>
-  );
-}
-
-function Spinner() {
-  return (
-    <View style={styles.center}>
-      <ActivityIndicator color={colors.accent} />
-    </View>
-  );
-}
-
-function ErrorState({ text, onRetry }: { text: string; onRetry: () => void }) {
-  return (
-    <View style={styles.center}>
-      <Text style={styles.errorText}>{text}</Text>
-      <Pressable style={styles.retryBtn} onPress={onRetry}>
-        <Text style={styles.retryLabel}>Try again</Text>
-      </Pressable>
     </View>
   );
 }
@@ -339,38 +326,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.fgMuted,
   },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space(2.5),
-    paddingHorizontal: space(4),
-  },
   empty: {
     fontFamily: fonts.ui,
     fontSize: 14,
     color: colors.fgMuted,
     textAlign: 'center',
     paddingTop: space(6),
-  },
-  errorText: {
-    fontFamily: fonts.ui,
-    fontSize: 14,
-    lineHeight: 21,
-    color: colors.fgMuted,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    borderWidth: 1,
-    borderColor: colors.hairline,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surface,
-    paddingHorizontal: space(4),
-    paddingVertical: space(2),
-  },
-  retryLabel: {
-    fontFamily: fonts.uiMedium,
-    fontSize: 13,
-    color: colors.fg,
   },
 });

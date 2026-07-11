@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -16,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { FeedCard } from '@/components/community/feed-card';
+import { ErrorState, LoadingState } from '@/components/ui/states';
 import { fetchFeed, searchProfiles } from '@/lib/feed-queries';
 import { useSession } from '@/lib/session';
 import { colors, fonts, radii, space } from '@/lib/theme';
@@ -84,9 +84,12 @@ export default function CommunityScreen() {
 
       {searching ? (
         searchQuery.isPending ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={colors.accent} />
-          </View>
+          <LoadingState />
+        ) : searchQuery.isError ? (
+          <ErrorState
+            message="We could not search climbers. Check your connection and try again."
+            onRetry={() => searchQuery.refetch()}
+          />
         ) : (searchQuery.data ?? []).length === 0 ? (
           <View style={styles.center}>
             <Ionicons name="person-outline" size={28} color={colors.fgFaint} />
@@ -115,17 +118,12 @@ export default function CommunityScreen() {
           />
         )
       ) : feedQuery.isPending ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.accent} />
-        </View>
+        <LoadingState />
       ) : feedQuery.isError ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyTitle}>Something went wrong</Text>
-          <Text style={styles.emptyText}>We could not load the feed.</Text>
-          <Pressable style={styles.retryBtn} onPress={() => feedQuery.refetch()}>
-            <Text style={styles.retryLabel}>Try again</Text>
-          </Pressable>
-        </View>
+        <ErrorState
+          message="We could not load the feed. Check your connection and try again."
+          onRetry={() => feedQuery.refetch()}
+        />
       ) : (
         <FlatList
           style={styles.grow}
@@ -327,19 +325,5 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: colors.fgMuted,
     textAlign: 'center',
-  },
-  retryBtn: {
-    marginTop: space(1),
-    borderWidth: 1,
-    borderColor: colors.hairline,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surface,
-    paddingHorizontal: space(4),
-    paddingVertical: space(2),
-  },
-  retryLabel: {
-    fontFamily: fonts.uiMedium,
-    fontSize: 13,
-    color: colors.fg,
   },
 });

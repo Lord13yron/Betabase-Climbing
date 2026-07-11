@@ -130,6 +130,6 @@ const styles = StyleSheet.create({
   problem: {
     fontFamily: fonts.uiMedium,
     fontSize: 14,
-    color: '#e6a49d',
+    color: colors.errorText,
   },
 });

@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.ui,
     fontSize: 14,
-    color: '#e6a49d',
+    color: colors.errorText,
   },
   switch: {
     fontFamily: fonts.ui,

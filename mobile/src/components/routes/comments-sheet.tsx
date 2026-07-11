@@ -3,9 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
   Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,15 +10,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
+import { Sheet, SheetTitle } from '@/components/ui/sheet';
 import { createComment, deleteComment, type Comment, type CommentTarget } from '@/lib/comments';
 import { useSession } from '@/lib/session';
 import { colors, fonts, radii, space } from '@/lib/theme';
-
-// Error text color from the web's var(--color-hold-red).
-const ERROR_RED = '#d6453b';
 
 // Ported from the web RouteComments.
 function relativeTime(iso: string): string {
@@ -50,7 +44,6 @@ export function CommentsSheet({
   comments: Comment[];
   onClose: () => void;
 }) {
-  const insets = useSafeAreaInsets();
   const { session } = useSession();
   const queryClient = useQueryClient();
   const userId = session?.user.id;
@@ -99,104 +92,89 @@ export function CommentsSheet({
   const title = target && 'videoId' in target ? 'Comments' : 'Discussion';
 
   return (
-    <Modal visible={target !== null} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close comments" />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + space(3) }]}>
-          <View style={styles.head}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.count}>
-              {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
-            </Text>
-            <Pressable
-              onPress={onClose}
-              hitSlop={space(2)}
-              accessibilityLabel="Close comments"
-              style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}>
-              <Ionicons name="close" size={20} color={colors.fgMuted} />
-            </Pressable>
-          </View>
+    <Sheet
+      visible={target !== null}
+      onClose={onClose}
+      closeLabel="Close comments"
+      avoidKeyboard
+      sheetStyle={styles.sheet}>
+      <View style={styles.head}>
+        <SheetTitle>{title}</SheetTitle>
+        <Text style={styles.count}>
+          {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+        </Text>
+        <Pressable
+          onPress={onClose}
+          hitSlop={space(2)}
+          accessibilityLabel="Close comments"
+          style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}>
+          <Ionicons name="close" size={20} color={colors.fgMuted} />
+        </Pressable>
+      </View>
 
-          <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-            {comments.length === 0 ? (
-              <Text style={styles.emptyText}>No comments yet. Start the conversation.</Text>
-            ) : (
-              comments.map((c) => (
-                <View style={styles.comment} key={c.id}>
-                  <Avatar
-                    src={c.profiles?.avatar_url ?? null}
-                    name={c.profiles?.username ?? null}
-                    size={36}
-                  />
-                  <View style={styles.commentBody}>
-                    <View style={styles.commentHead}>
-                      <Text style={styles.commentName}>{c.profiles?.username ?? 'Unknown'}</Text>
-                      <Text style={styles.commentTime}>{relativeTime(c.created_at)}</Text>
-                      {c.author_id === userId ? (
-                        <Pressable
-                          onPress={() => confirmDelete(c.id)}
-                          disabled={deleteMutation.isPending}
-                          hitSlop={space(1.5)}
-                          style={({ pressed }) => pressed && styles.pressed}>
-                          <Text style={styles.commentDelete}>Delete</Text>
-                        </Pressable>
-                      ) : null}
-                    </View>
-                    <Text style={styles.commentText}>{c.body}</Text>
-                  </View>
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+        {comments.length === 0 ? (
+          <Text style={styles.emptyText}>No comments yet. Start the conversation.</Text>
+        ) : (
+          comments.map((c) => (
+            <View style={styles.comment} key={c.id}>
+              <Avatar
+                src={c.profiles?.avatar_url ?? null}
+                name={c.profiles?.username ?? null}
+                size={36}
+              />
+              <View style={styles.commentBody}>
+                <View style={styles.commentHead}>
+                  <Text style={styles.commentName}>{c.profiles?.username ?? 'Unknown'}</Text>
+                  <Text style={styles.commentTime}>{relativeTime(c.created_at)}</Text>
+                  {c.author_id === userId ? (
+                    <Pressable
+                      onPress={() => confirmDelete(c.id)}
+                      disabled={deleteMutation.isPending}
+                      hitSlop={space(1.5)}
+                      style={({ pressed }) => pressed && styles.pressed}>
+                      <Text style={styles.commentDelete}>Delete</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
-              ))
-            )}
-          </ScrollView>
+                <Text style={styles.commentText}>{c.body}</Text>
+              </View>
+            </View>
+          ))
+        )}
+      </ScrollView>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <View style={styles.composer}>
-            <TextInput
-              value={body}
-              onChangeText={setBody}
-              placeholder="Add a comment..."
-              placeholderTextColor={colors.fgFaint}
-              maxLength={1000}
-              multiline
-              style={styles.input}
-            />
-            <Pressable
-              onPress={onPost}
-              disabled={postMutation.isPending || !body.trim()}
-              style={({ pressed }) => [
-                styles.postBtn,
-                (postMutation.isPending || !body.trim()) && styles.postBtnDisabled,
-                pressed && styles.pressed,
-              ]}>
-              <Text style={styles.postLabel}>Post</Text>
-            </Pressable>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      <View style={styles.composer}>
+        <TextInput
+          value={body}
+          onChangeText={setBody}
+          placeholder="Add a comment..."
+          placeholderTextColor={colors.fgFaint}
+          maxLength={1000}
+          multiline
+          style={styles.input}
+        />
+        <Pressable
+          onPress={onPost}
+          disabled={postMutation.isPending || !body.trim()}
+          style={({ pressed }) => [
+            styles.postBtn,
+            (postMutation.isPending || !body.trim()) && styles.postBtnDisabled,
+            pressed && styles.pressed,
+          ]}>
+          <Text style={styles.postLabel}>Post</Text>
+        </Pressable>
+      </View>
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-  },
   sheet: {
     maxHeight: '82%',
     minHeight: '50%',
-    backgroundColor: colors.bgDeep,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.hairlineSoft,
-    paddingTop: space(5),
   },
   head: {
     flexDirection: 'row',
@@ -204,13 +182,6 @@ const styles = StyleSheet.create({
     gap: space(2.5),
     paddingHorizontal: space(5),
     marginBottom: space(3),
-  },
-  title: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: colors.fgMuted,
   },
   count: {
     flex: 1,
@@ -274,7 +245,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.ui,
     fontSize: 13,
-    color: ERROR_RED,
+    color: colors.error,
     paddingHorizontal: space(5),
     paddingBottom: space(2),
   },

@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { toggleFavoriteRoute } from '@/lib/gym-detail';
 import { toggleSend } from '@/lib/route-detail';
@@ -33,6 +33,7 @@ export function RouteActions({
   // send_count (S3 gym_routes view).
   const sendMutation = useMutation({
     mutationFn: () => toggleSend(userId!, routeId),
+    onError: () => Alert.alert('Could not update send', 'Check your connection and try again.'),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['route-my-state', routeId] });
       queryClient.invalidateQueries({ queryKey: ['route-senders', routeId] });
@@ -42,6 +43,7 @@ export function RouteActions({
 
   const favMutation = useMutation({
     mutationFn: () => toggleFavoriteRoute(userId!, routeId),
+    onError: () => Alert.alert('Could not update favorite', 'Check your connection and try again.'),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['route-my-state', routeId] });
       queryClient.invalidateQueries({ queryKey: ['favorite-route-ids', gymId] });

@@ -53,7 +53,7 @@ function GradeChip({
         {label}
       </Text>
       <Text style={[styles.chipValue, { color: grade ? BLOCK_INK : colors.slate400 }]}>
-        {grade ?? '—'}
+        {grade ?? 'Not set'}
       </Text>
     </View>
   );

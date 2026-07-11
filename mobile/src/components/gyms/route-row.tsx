@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Discipline } from '@/lib/grades';
 import { shortSetLabel, toggleFavoriteRoute, type GymRoute } from '@/lib/gym-detail';
@@ -102,6 +102,7 @@ function FavoriteHeart({
 
   const toggle = useMutation({
     mutationFn: () => toggleFavoriteRoute(userId!, routeId),
+    onError: () => Alert.alert('Could not update favorite', 'Check your connection and try again.'),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ['favorite-route-ids', gymId] }),
   });

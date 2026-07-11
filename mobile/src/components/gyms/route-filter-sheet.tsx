@@ -1,6 +1,6 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Sheet, SheetTitle } from '@/components/ui/sheet';
 import type { Discipline } from '@/lib/grades';
 import { holdColor } from '@/lib/holds';
 import type { Wall } from '@/lib/gym-detail';
@@ -100,8 +100,6 @@ export function RouteFilterSheet({
   onSort: (s: RouteSort) => void;
   onClearAll: () => void;
 }) {
-  const insets = useSafeAreaInsets();
-
   const gradeOpts = activeGrades.map((g, i) => ({ value: String(i), label: g }));
   const wallOpts = [
     { value: 'all', label: 'All walls' },
@@ -110,106 +108,86 @@ export function RouteFilterSheet({
   ];
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close filters" />
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + space(4) }]}>
-        <View style={styles.head}>
-          <Text style={styles.title}>Filters & sort</Text>
-        </View>
-
-        <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Grade</Text>
-            {discipline === 'all' ? (
-              <Text style={styles.hint}>Pick a discipline to filter by grade.</Text>
-            ) : (
-              <>
-                <Text style={styles.sub}>Min</Text>
-                <ChipGroup
-                  scroll
-                  value={String(gradeMin)}
-                  options={gradeOpts}
-                  onChange={(v) => onGradeMin(Number(v))}
-                />
-                <Text style={styles.sub}>Max</Text>
-                <ChipGroup
-                  scroll
-                  value={String(gradeMax)}
-                  options={gradeOpts}
-                  onChange={(v) => onGradeMax(Number(v))}
-                />
-              </>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Color</Text>
-            <ChipGroup
-              value={color}
-              options={[
-                { value: 'all', label: 'Any' },
-                ...colorOptions.map((c) => ({ value: c, label: c, swatch: holdColor(c) })),
-              ]}
-              onChange={onColor}
-            />
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Wall</Text>
-            <ChipGroup value={wall} options={wallOpts} onChange={onWall} />
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Sort</Text>
-            <ChipGroup
-              value={sort}
-              options={ROUTE_SORTS}
-              onChange={(v) => onSort(v as RouteSort)}
-            />
-          </View>
-        </ScrollView>
-
-        <View style={styles.foot}>
-          <Pressable
-            onPress={onClearAll}
-            style={({ pressed }) => [styles.clearBtn, pressed && styles.pressed]}>
-            <Text style={styles.clearLabel}>Clear all</Text>
-          </Pressable>
-          <Pressable
-            onPress={onClose}
-            style={({ pressed }) => [styles.doneBtn, pressed && styles.pressed]}>
-            <Text style={styles.doneLabel}>Done</Text>
-          </Pressable>
-        </View>
+    <Sheet visible={visible} onClose={onClose} closeLabel="Close filters" sheetStyle={styles.sheet}>
+      <View style={styles.head}>
+        <SheetTitle>Filters &amp; sort</SheetTitle>
       </View>
-    </Modal>
+
+      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Grade</Text>
+          {discipline === 'all' ? (
+            <Text style={styles.hint}>Pick a discipline to filter by grade.</Text>
+          ) : (
+            <>
+              <Text style={styles.sub}>Min</Text>
+              <ChipGroup
+                scroll
+                value={String(gradeMin)}
+                options={gradeOpts}
+                onChange={(v) => onGradeMin(Number(v))}
+              />
+              <Text style={styles.sub}>Max</Text>
+              <ChipGroup
+                scroll
+                value={String(gradeMax)}
+                options={gradeOpts}
+                onChange={(v) => onGradeMax(Number(v))}
+              />
+            </>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Color</Text>
+          <ChipGroup
+            value={color}
+            options={[
+              { value: 'all', label: 'Any' },
+              ...colorOptions.map((c) => ({ value: c, label: c, swatch: holdColor(c) })),
+            ]}
+            onChange={onColor}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Wall</Text>
+          <ChipGroup value={wall} options={wallOpts} onChange={onWall} />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Sort</Text>
+          <ChipGroup
+            value={sort}
+            options={ROUTE_SORTS}
+            onChange={(v) => onSort(v as RouteSort)}
+          />
+        </View>
+      </ScrollView>
+
+      <View style={styles.foot}>
+        <Pressable
+          onPress={onClearAll}
+          style={({ pressed }) => [styles.clearBtn, pressed && styles.pressed]}>
+          <Text style={styles.clearLabel}>Clear all</Text>
+        </Pressable>
+        <Pressable
+          onPress={onClose}
+          style={({ pressed }) => [styles.doneBtn, pressed && styles.pressed]}>
+          <Text style={styles.doneLabel}>Done</Text>
+        </Pressable>
+      </View>
+    </Sheet>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-  },
   sheet: {
     maxHeight: '82%',
-    backgroundColor: colors.bgDeep,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.hairlineSoft,
-    paddingTop: space(5),
   },
   head: {
     paddingHorizontal: space(5),
     marginBottom: space(3),
-  },
-  title: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: colors.fgMuted,
   },
   body: {
     flexGrow: 0,
